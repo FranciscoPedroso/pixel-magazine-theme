@@ -140,27 +140,27 @@ function newpixel_handle_newsletter_subscribe() {
     if ( newpixel_honeypot_tripped() ) {
         wp_send_json_error( array( 'message' => __( 'Não foi possível subscrever.', 'newpixel' ) ), 400 );
     }
-    $email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    // When logged in, only the account itself can be subscribed.
+    $email = is_user_logged_in()
+        ? wp_get_current_user()->user_email
+        : ( isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '' );
     if ( ! is_email( $email ) ) {
         wp_send_json_error( array( 'message' => __( 'Email inválido.', 'newpixel' ) ), 400 );
     }
+    if ( newpixel_rate_limited( 'nl-ip|' . newpixel_client_ip(), 20, HOUR_IN_SECONDS ) ) {
+        wp_send_json_error( array( 'message' => __( 'Demasiados pedidos. Tenta novamente mais tarde.', 'newpixel' ) ), 429 );
+    }
 
-    // Persist locally. (If you later wire up Mailchimp/Buttondown, this is the
-    // place to also call their API.)
-    do_action( 'newpixel_newsletter_subscribe', $email );
-    newpixel_set_newsletter_subscribed( true );
-
-    // Guests don't have a user_meta row to flag, so we record their email in a
-    // dedicated option. The moment they (or anyone) create an account with the
-    // same email, newpixel_promote_guest_subscription() flips the user_meta on.
-    if ( ! is_user_logged_in() ) {
-        newpixel_record_guest_subscription( $email );
+    // The subscription only becomes active once the email's owner confirms it
+    // (inc/newsletter-confirm.php).
+    if ( ! newpixel_newsletter_request_confirmation( $email ) ) {
+        wp_send_json_error( array( 'message' => __( 'Não foi possível enviar o email de confirmação. Tenta novamente mais tarde.', 'newpixel' ) ), 500 );
     }
 
     wp_send_json_success( array(
         'message' => sprintf(
             /* translators: %s: subscriber email */
-            __( 'Obrigado! Vais receber a confirmação em %s.', 'newpixel' ),
+            __( 'Quase lá! Enviámos um link de confirmação para %s.', 'newpixel' ),
             $email
         ),
     ) );

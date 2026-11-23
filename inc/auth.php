@@ -21,18 +21,51 @@ function pixel_auth_handle_login() {
         wp_send_json_error( array( 'message' => __( 'Preenche o email e a palavra-passe.', 'newpixel' ) ), 400 );
     }
 
+    // This endpoint doesn't go through the secret slug, so it has its own
+    // limit. Only failures count, per account and per IP; an unknown account
+    // counts the same way, so the response can't reveal which emails exist.
+    $login_key      = strtolower( sanitize_user( $log ) );
+    $account        = get_user_by( 'email', $login_key ) ?: get_user_by( 'login', $login_key );
+    $account_bucket = 'login-account|' . ( $account ? $account->ID : md5( $login_key ) );
+    $limits         = array(
+        $account_bucket                       => 5,
+        'login-ip|' . newpixel_client_ip()    => 30,
+    );
+
+    foreach ( $limits as $bucket => $limit ) {
+        if ( newpixel_rate_is_full( $bucket, $limit ) ) {
+            wp_send_json_error( array( 'message' => __( 'Demasiadas tentativas. Tenta novamente daqui a 15 minutos.', 'newpixel' ) ), 429 );
+        }
+    }
+
     $creds = array(
         'user_login'    => sanitize_user( $log ),
         'user_password' => $pwd,
         'remember'      => ! empty( $_POST['rememberme'] ),
     );
 
+    // Administrator accounts only sign in through the secret login, where the
+    // second factor is enforced. Runs after the password check, so the response
+    // and timing match a wrong password.
+    $block_admin = static function ( $user ) {
+        return ( $user instanceof WP_User && user_can( $user, 'manage_options' ) )
+            ? new WP_Error( 'pixel_admin_modal' )
+            : $user;
+    };
+    add_filter( 'authenticate', $block_admin, 100 );
     $user = wp_signon( $creds, is_ssl() );
+    remove_filter( 'authenticate', $block_admin, 100 );
 
     if ( is_wp_error( $user ) ) {
+        foreach ( $limits as $bucket => $limit ) {
+            newpixel_rate_limited( $bucket, $limit, 15 * MINUTE_IN_SECONDS );
+        }
         // Don't leak which field is wrong (avoid email enumeration).
         wp_send_json_error( array( 'message' => __( 'Email ou palavra-passe incorretos.', 'newpixel' ) ), 401 );
     }
+
+    // Account only: clearing the IP would let an attacker with an account reset it.
+    newpixel_rate_clear( $account_bucket );
 
     $redirect = ! empty( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : home_url( '/' );
     wp_send_json_success( array( 'redirect' => $redirect ) );
@@ -52,6 +85,14 @@ function pixel_auth_handle_register() {
 
     if ( ! get_option( 'users_can_register' ) ) {
         wp_send_json_error( array( 'message' => __( 'Os registos estão temporariamente desativados.', 'newpixel' ) ), 403 );
+    }
+
+    // Every attempt counts, because the response reveals whether an email has
+    // an account; created accounts have a tighter limit.
+    $ip = newpixel_client_ip();
+    if ( newpixel_rate_is_full( 'register-new|' . $ip, 5 )
+        || newpixel_rate_limited( 'register-try|' . $ip, 20, HOUR_IN_SECONDS ) ) {
+        wp_send_json_error( array( 'message' => __( 'Demasiadas tentativas. Tenta novamente mais tarde.', 'newpixel' ) ), 429 );
     }
 
     $email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
@@ -89,6 +130,7 @@ function pixel_auth_handle_register() {
     if ( is_wp_error( $user_id ) ) {
         wp_send_json_error( array( 'message' => __( 'Não foi possível criar a conta.', 'newpixel' ) ), 500 );
     }
+    newpixel_rate_limited( 'register-new|' . $ip, 5, HOUR_IN_SECONDS );
 
     wp_update_user( array(
         'ID'           => $user_id,

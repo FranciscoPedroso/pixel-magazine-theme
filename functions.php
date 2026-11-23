@@ -13,6 +13,7 @@ require_once get_theme_file_path( 'inc/hidden-login.php' );
 require_once get_theme_file_path( 'inc/security.php' );
 require_once get_theme_file_path( 'inc/profile.php' );
 require_once get_theme_file_path( 'inc/newsletter.php' );
+require_once get_theme_file_path( 'inc/newsletter-confirm.php' );
 require_once get_theme_file_path( 'inc/newsletter-issues.php' );
 require_once get_theme_file_path( 'inc/newsletter-headlines.php' );
 require_once get_theme_file_path( 'inc/comments.php' );

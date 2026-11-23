@@ -393,9 +393,8 @@
     };
 
     // ----- Newsletter form (AJAX) ----------------------------------------------
-    // Persists subscription state via the pixel_newsletter_subscribe endpoint.
-    // The server marks the user (or anon visitor via cookie) as subscribed so
-    // the rail block won't render again on subsequent visits.
+    // Requests the subscription from the pixel_newsletter_subscribe endpoint,
+    // which sends the confirmation email. The cookie is only set on confirmation.
     // Hides the subscribe blocks (home sidebar and end of article) from
     // existing subscribers. Client-side, as the HTML may come from a page cache.
     (function () {
@@ -415,29 +414,47 @@
             const email = (visibleInput && visibleInput.value) || (hiddenInput && hiddenInput.value) || '';
             if (!email) return;
 
+            const submit = form.querySelector('button[type="submit"]');
+            const message = (text) => {
+                const p = document.createElement('p');
+                p.style.cssText = 'margin:0;font-size:13px;line-height:1.5;color:inherit;opacity:.85;';
+                p.textContent = text;
+                return p;
+            };
+            // Keep the error next to the form so the reader can try again.
+            const showError = (text) => {
+                let error = form.querySelector('[data-newsletter-error]');
+                if (!error) {
+                    error = message('');
+                    error.setAttribute('data-newsletter-error', '');
+                    error.setAttribute('role', 'alert');
+                    error.style.flexBasis = '100%';
+                    error.style.marginTop = '8px';
+                    form.appendChild(error);
+                }
+                error.textContent = text;
+                if (submit) submit.disabled = false;
+            };
+
             const cfg = window.pixelAuth || {};
             if (!cfg.ajaxUrl) {
-                form.innerHTML = '<p style="margin:0;font-size:13px;line-height:1.5;color:inherit;opacity:.85;">Obrigado! Vais receber a confirmação em ' + email + '.</p>';
+                showError('Não foi possível subscrever. Recarrega a página.');
                 return;
             }
 
-            const submit = form.querySelector('button[type="submit"]');
             if (submit) submit.disabled = true;
 
             postJSON(cfg.ajaxUrl, new FormData(form))
                 .then((r) => {
-                    const msg = (r.success && r.json.data && r.json.data.message)
-                        || 'Obrigado! Vais receber a confirmação em ' + email + '.';
-                    form.innerHTML = '<p style="margin:0;font-size:13px;line-height:1.5;color:inherit;opacity:.85;">' + msg + '</p>';
-                    if (r.success) trackEvent('generate_lead', { lead_source: 'newsletter', placement: form.dataset.placement || 'home' });
-                    // Hide the whole block on next pageview — cookie is already
-                    // set server-side. Mirror in localStorage as a safety belt
-                    // for browsers that block cross-origin cookies.
-                    safeStorage.set('pixel_newsletter_subscribed', '1');
+                    const text = r.json && r.json.data && r.json.data.message;
+                    if (!r.success) {
+                        showError(text || 'Não foi possível subscrever. Tenta novamente.');
+                        return;
+                    }
+                    form.replaceChildren(message(text || 'Enviámos um link de confirmação para ' + email + '.'));
+                    trackEvent('generate_lead', { lead_source: 'newsletter', placement: form.dataset.placement || 'home' });
                 })
-                .catch(() => {
-                    if (submit) submit.disabled = false;
-                });
+                .catch(() => showError('Erro de rede. Tenta novamente.'));
         });
     });
 
@@ -586,7 +603,11 @@
                 const subscribe = newsletterToggle.checked;
                 profileAction('pixel_profile_toggle_newsletter', { subscribe: subscribe ? '1' : '' })
                     .then((r) => {
-                        if (r.success) {
+                        if (r.success && r.json.data && r.json.data.pending) {
+                            // Only becomes active once the reader confirms by email.
+                            newsletterToggle.checked = false;
+                            showMsg(newsletterMsg, r.json.data.message, false);
+                        } else if (r.success) {
                             showMsg(newsletterMsg, subscribe ? 'Subscrição ativada.' : 'Subscrição cancelada.', false);
                             safeStorage.set('pixel_newsletter_subscribed', subscribe ? '1' : '');
                         } else {

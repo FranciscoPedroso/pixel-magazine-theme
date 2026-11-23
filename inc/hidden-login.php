@@ -86,6 +86,16 @@ function newpixel_rate_limited( $bucket, $limit, $window ) {
     return false;
 }
 
+/** Is the bucket already full? Unlike the above, this doesn't count the request. */
+function newpixel_rate_is_full( $bucket, $limit ) {
+    $data = get_transient( 'np_rl_' . md5( $bucket ) );
+    return is_array( $data ) && ! empty( $data['until'] ) && $data['until'] > time() && $data['n'] >= $limit;
+}
+
+function newpixel_rate_clear( $bucket ) {
+    delete_transient( 'np_rl_' . md5( $bucket ) );
+}
+
 /**
  * Client IP. REMOTE_ADDR only: X-Forwarded-For headers can be forged by the
  * requester and would bypass the limit.

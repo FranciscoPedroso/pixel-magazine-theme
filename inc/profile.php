@@ -69,7 +69,22 @@ function pixel_profile_toggle_newsletter() {
     pixel_profile_check_request();
     $subscribe = ! empty( $_POST['subscribe'] );
     if ( $subscribe ) {
-        do_action( 'newpixel_newsletter_subscribe', wp_get_current_user()->user_email );
+        $email = wp_get_current_user()->user_email;
+        // Account emails aren't verified at sign-up, so this confirms too.
+        if ( ! newpixel_newsletter_email_is_subscribed( $email ) ) {
+            if ( ! newpixel_newsletter_request_confirmation( $email ) ) {
+                wp_send_json_error( array( 'message' => __( 'Não foi possível enviar o email de confirmação.', 'newpixel' ) ), 500 );
+            }
+            wp_send_json_success( array(
+                'pending' => true,
+                'message' => sprintf(
+                    /* translators: %s: account email */
+                    __( 'Enviámos um link de confirmação para %s.', 'newpixel' ),
+                    $email
+                ),
+            ) );
+        }
+        newpixel_newsletter_activate( $email );
     } else {
         do_action( 'newpixel_newsletter_unsubscribe', wp_get_current_user()->user_email );
     }
