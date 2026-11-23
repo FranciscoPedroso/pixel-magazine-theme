@@ -1,0 +1,169 @@
+// ============================================================================
+// Liquid glass — shared mixins (emits no CSS on its own)
+// ============================================================================
+// The glass look comes from three layers, cheapest to most expensive:
+//
+//   1. glass-edges / glass-edges-thumb — a stack of inset shadows drawing the
+//      specular highlight on the edges. Box-shadow only: works in every
+//      browser and costs nothing to composite.
+//   2. backdrop-filter blur + saturate — the frosted look.
+//   3. Refraction (SVG filter #np-glass, see header.php) — bends the content
+//      at the edges. Only Chromium accepts url() in backdrop-filter; Safari
+//      and Firefox drop the whole declaration (losing the blur too), so it
+//      only applies under `html.lg-refract`, a class set by the boot script
+//      in header.php.
+//
+// Highlight intensities come from --glass-reflex-light / -dark, which
+// _tokens.scss swaps in the dark theme: less shine, more shadow.
+
+// Both shadow stacks are Sass values emitted ONCE, as --np-glass-edges /
+// --np-glass-thumb on :root (_tokens.scss). The mixins use the variable:
+// repeating them on each element would add ~17 KB of CSS.
+// Note: a var() inside a custom property resolves where it's defined (:root).
+// Anything changing --glass-reflex-* locally (the chip over the image, the
+// modal's close button) must request the whole stack with $local: true.
+
+// Edges of a container (theme selector track, round buttons).
+$glass-edges:
+        inset 0 0 0 1px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 10%), transparent),
+        inset 1.8px 3px 0 -2px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 90%), transparent),
+        inset -2px -2px 0 -2px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 80%), transparent),
+        inset -3px -8px 1px -6px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 60%), transparent),
+        inset -0.3px -1px 4px 0 color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 12%), transparent),
+        inset -1.5px 2.5px 0 -2px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+        inset 0 3px 4px -2px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+        inset 2px -6.5px 1px -4px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+        0 1px 5px 0 color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+        0 6px 16px 0 color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+
+// Edges of a piece resting on another (the selector's thumb, chips).
+$glass-edges-thumb:
+        inset 0 0 0 1px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 10%), transparent),
+        inset 2px 1px 0 -1px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 90%), transparent),
+        inset -1.5px -1px 0 -1px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 80%), transparent),
+        inset -2px -6px 1px -5px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 60%), transparent),
+        inset -1px 2px 3px -1px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
+        inset 0 -4px 1px -2px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
+        0 3px 6px 0 color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+
+@mixin glass-edges($local: false) {
+    @if $local {
+        box-shadow: $glass-edges;
+    } @else {
+        box-shadow: var(--np-glass-edges);
+    }
+}
+
+@mixin glass-edges-thumb($local: false) {
+    @if $local {
+        box-shadow: $glass-edges-thumb;
+    } @else {
+        box-shadow: var(--np-glass-thumb);
+    }
+}
+
+// Frost + (on Chromium) refraction. $blur is deliberately small: Apple-style
+// glass is more transparent than frosted, and blur is the expensive part.
+// $map picks the map by the element's aspect ratio (see header.php).
+@mixin glass-backdrop($blur: 8px, $sat: var(--glass-sat), $map: np-glass) {
+    -webkit-backdrop-filter: blur($blur) saturate($sat);
+    backdrop-filter: blur($blur) saturate($sat);
+
+    :root.lg-refract & {
+        backdrop-filter: blur($blur) url(##{$map}) saturate($sat);
+    }
+}
+
+// Lens only, no frost outside Chromium: for pieces already resting on another
+// glass surface (the buttons inside the header). On Safari/Firefox the glass
+// behind already blurs, so repeating the blur would only cost performance.
+@mixin glass-lens($map: np-glass, $blur: 1px) {
+    :root.lg-refract & {
+        backdrop-filter: blur($blur) url(##{$map}) saturate(140%);
+    }
+}
+
+// Round icon button in the header (search, profile, theme on mobile).
+// Replaces the flat 1px border with a glass edge. Hover: just more shine;
+// nothing grows or moves on hover anywhere in the site's glass.
+@mixin glass-button {
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+    color: var(--fg);
+    @include glass-edges;
+    transition: background-color 200ms ease;
+
+    &:hover { background: color-mix(in srgb, var(--glass-tint) 22%, transparent); }
+}
+
+// Glass pill with text (tags, share, pagination, "Ouvir"). Same recipe as the
+// round button, with the thinner edge of a small piece.
+@mixin glass-chip {
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+    color: var(--fg);
+    @include glass-edges-thumb;
+    transition: color 160ms ease, background-color 200ms ease;
+
+    &:hover { background: color-mix(in srgb, var(--glass-tint) 22%, transparent); }
+}
+
+// Thumb sliding in a segmented control (modal tabs, theme on the profile).
+// The header's theme selector has its own, with icons and fixed positions.
+@mixin glass-thumb {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--glass-tint) 36%, transparent);
+    @include glass-edges-thumb;
+    transition:
+        translate 400ms cubic-bezier(1, 0, 0.4, 1),
+        opacity 200ms ease;
+}
+
+// Tinted glass for action buttons (CTA, submit, current page, active tab):
+// transparent glass keeping only the colour's HUE (32%), with a top sheen,
+// specular edges and a halo in the same colour. The colour lives in --tint, so
+// a :hover can swap it without repeating the recipe. Text uses the theme colour
+// ($text): with a transparent background, contrast comes from the page.
+// Hover: just more shine.
+// Note: inlined on purpose rather than @extend. An extended rule moves to the
+// top of the CSS and loses to base rules declared later.
+@mixin glass-tinted($tint, $text: var(--fg)) {
+    --tint: #{$tint};
+    border: 0;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 24%), transparent), transparent 60%),
+        color-mix(in srgb, var(--tint) 32%, transparent);
+    color: #{$text};
+    box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 65%), transparent),
+        inset 0 0 8px -3px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 40%), transparent),
+        inset 0 -1px 1px -0.5px color-mix(in srgb, var(--tint) 45%, transparent),
+        0 4px 14px -6px color-mix(in srgb, var(--tint) 50%, transparent);
+    transition: filter 200ms ease, color 200ms ease;
+
+    &:hover:not(:disabled) { filter: brightness(1.08) saturate(1.1); }
+}
+
+// Glass text field: the header search recipe for ALL the site's fields (modal,
+// profile, newsletter, comments), on desktop and mobile: a transparent pill
+// well, glass edges and, on focus, a ring in the brand colour. Padding and font
+// size are left to each context. A textarea can't be a pill, so it takes $radius.
+@mixin glass-field($radius: 999px) {
+    border: 0;
+    border-radius: $radius;
+    background: color-mix(in srgb, var(--glass-tint) 10%, transparent);
+    box-shadow: var(--np-glass-thumb);
+    outline: 2px solid transparent;
+    outline-offset: 1px;
+    transition: background-color 0.2s ease, outline-color 0.2s ease;
+
+    &:hover { background: color-mix(in srgb, var(--glass-tint) 16%, transparent); }
+
+    &:focus,
+    &:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+        outline-offset: 1px;
+    }
+}

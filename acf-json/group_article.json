@@ -1,0 +1,195 @@
+{
+    "key": "group_article",
+    "title": "Article",
+    "description": "All editorial fields for posts \u2014 content, card overrides, and optional review block. Replaces the legacy 'Post Fields' and 'Artigo \u00b7 Review' groups.",
+    "fields": [
+        {
+            "key": "field_tab_content",
+            "label": "Content",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_dek",
+            "label": "Dek (subtitle)",
+            "name": "dek",
+            "type": "textarea",
+            "instructions": "1\u20132 sentence hook below the title. Used as the subtitle on the single article AND as the preview text on lead / feature / archive cards.",
+            "required": 0,
+            "rows": 3,
+            "new_lines": "br"
+        },
+        {
+            "key": "field_hero_caption",
+            "label": "Hero caption",
+            "name": "hero_caption",
+            "type": "text",
+            "instructions": "Italic caption shown below the hero image. If empty, the media library caption is used as fallback.",
+            "required": 0
+        },
+        {
+            "key": "field_listen_url",
+            "label": "Listen URL (audio version)",
+            "name": "listen_url",
+            "type": "url",
+            "instructions": "Optional URL to an audio / video version of the article (YouTube, Spotify, Soundcloud, etc.). If set, a 'Ouvir artigo' button appears at the top of the body on the single page.",
+            "required": 0
+        },
+        {
+            "key": "field_tab_cards",
+            "label": "Cards (front page)",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_big_kicker",
+            "label": "Big kicker",
+            "name": "big_kicker",
+            "type": "text",
+            "instructions": "Giant uppercase word shown on the text-style feature card on the front page. Optional \u2014 falls back to the first word of the title.",
+            "required": 0,
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            }
+        },
+        {
+            "key": "field_opinion_quote",
+            "label": "Opinion quote",
+            "name": "opinion_quote",
+            "type": "textarea",
+            "instructions": "Pull-quote shown on the opinion card on the front page. Only used when this post is the weekly opinion column. Optional \u2014 falls back to the title in quotes.",
+            "required": 0,
+            "rows": 3,
+            "new_lines": "br",
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            }
+        },
+        {
+            "key": "field_tab_review",
+            "label": "Review (optional)",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_verdict_score",
+            "label": "Score",
+            "name": "verdict_score",
+            "type": "number",
+            "instructions": "Score from 0 to 10. Leave empty if this is not a review.",
+            "required": 0,
+            "min": 0,
+            "max": 10,
+            "step": 0.1,
+            "wrapper": {
+                "width": "25",
+                "class": "",
+                "id": ""
+            }
+        },
+        {
+            "key": "field_verdict_text",
+            "label": "Verdict",
+            "name": "verdict_text",
+            "type": "textarea",
+            "instructions": "1\u20133 sentence verdict summary. Appears inside the coloured score box.",
+            "required": 0,
+            "rows": 3,
+            "new_lines": "br",
+            "wrapper": {
+                "width": "75",
+                "class": "",
+                "id": ""
+            }
+        },
+        {
+            "key": "field_pros",
+            "label": "Pros",
+            "name": "pros",
+            "type": "repeater",
+            "instructions": "Positive points. One item per row.",
+            "required": 0,
+            "min": 0,
+            "max": 0,
+            "layout": "table",
+            "button_label": "Add pro",
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "sub_fields": [
+                {
+                    "key": "field_pro_item",
+                    "label": "Item",
+                    "name": "item",
+                    "type": "text",
+                    "required": 1,
+                    "parent_repeater": "field_pros"
+                }
+            ]
+        },
+        {
+            "key": "field_cons",
+            "label": "Cons",
+            "name": "cons",
+            "type": "repeater",
+            "instructions": "Negative points. One item per row.",
+            "required": 0,
+            "min": 0,
+            "max": 0,
+            "layout": "table",
+            "button_label": "Add con",
+            "wrapper": {
+                "width": "50",
+                "class": "",
+                "id": ""
+            },
+            "sub_fields": [
+                {
+                    "key": "field_con_item",
+                    "label": "Item",
+                    "name": "item",
+                    "type": "text",
+                    "required": 1,
+                    "parent_repeater": "field_cons"
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "post_type",
+                "operator": "==",
+                "value": "post"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": [
+        "excerpt",
+        "revisions",
+        "slug",
+        "author",
+        "format",
+        "send-trackbacks"
+    ],
+    "active": true,
+    "show_in_rest": 1,
+    "modified": 1779130481
+}

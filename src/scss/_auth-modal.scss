@@ -1,0 +1,481 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// Auth modal — login + register dialog opened from the header buttons.
+// ============================================================================
+
+.kf-auth {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+
+    &[hidden] { display: none; }
+
+    // Entrance: the backdrop darkens and the panel rises and fades in. The exit
+    // is the shorter inverse: main.js adds .is-closing and only hides the modal
+    // when the animation ends.
+    &:not([hidden]) &__backdrop { animation: kf-auth-fade-in 240ms ease both; }
+    &:not([hidden]) &__panel    { animation: kf-auth-panel-in 360ms cubic-bezier(.2, .8, .3, 1) both; }
+    &.is-closing &__backdrop    { animation: kf-auth-fade-out 180ms ease both; }
+    &.is-closing &__panel       { animation: kf-auth-panel-out 180ms ease both; }
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    &__panel {
+        position: relative;
+        width: 100%;
+        max-width: 1024px;
+        max-height: calc(100vh - 32px);
+        overflow: hidden;
+        background: var(--bg-alt);
+        border-radius: 16px;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        z-index: 5;
+        width: 32px;
+        height: 32px;
+        @include glass-button;
+        // On mobile it sits on the dark brand panel: fixed highlights and colour.
+        // From md up it sits on the form, which follows the theme.
+        --glass-reflex-light: 0.5;
+        --glass-reflex-dark: 1.4;
+        @include glass-edges($local: true);
+        color: #fafaf7;
+
+        @include mq(md) {
+            --glass-reflex-light: inherit;
+            --glass-reflex-dark: inherit;
+            color: var(--fg);
+        }
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+
+        // An icon instead of the "×" character, which never sat centred in the circle
+        // (glyph metrics vary by font).
+        .material-symbols-outlined {
+            font-size: 18px;
+            line-height: 1;
+        }
+    }
+
+    &__split {
+        display: grid;
+        grid-template-columns: 1fr;
+        height: 100%;
+        overflow-y: auto;
+
+        @include mq(md) {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    // ====================== LEFT: brand panel (always dark) =================
+    &__brand {
+        background: #0a0a0a;
+        color: #fafaf7;
+        padding: 32px 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 32px;
+        position: relative;
+        overflow: hidden;
+
+        @include mq(md) {
+            padding: 40px 56px;
+            min-height: 600px;
+        }
+    }
+
+    &__brand-bg-1,
+    &__brand-bg-2 {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    &__brand-bg-1 {
+        top: -200px; right: -200px;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.20) 0%, transparent 70%);
+    }
+    &__brand-bg-2 {
+        bottom: -150px; left: -100px;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(249, 115, 22, 0.13) 0%, transparent 70%);
+    }
+
+    &__brand-mark {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        color: #fafaf7; // brand panel is always dark — currentColor stays white
+        text-decoration: none;
+
+        // The shared logo lives inside this anchor; size it for the modal.
+        .kf-logo--auth {
+            display: block;
+            width: 130px;
+            height: auto;
+            color: inherit; // matches the panel's white text
+        }
+    }
+
+    &__brand-dot { color: $accent; }
+
+    &__brand-body {
+        position: relative;
+        z-index: 1;
+    }
+
+    &__brand-eyebrow {
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: $accent;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    &__brand-title {
+        font-family: $font-display;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 0.98;
+        margin: 0 0 16px;
+        text-wrap: balance;
+
+        em {
+            font-style: italic;
+            font-weight: 500;
+        }
+    }
+
+    &__brand-copy {
+        font-size: 15px;
+        line-height: 1.55;
+        opacity: 0.7;
+        margin: 0 0 24px;
+        max-width: 420px;
+    }
+
+    &__features {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+    }
+
+    // Identical white glass bubbles: the brand panel is always dark, so the
+    // highlights are fixed rather than theme-driven.
+    &__feature-icon {
+        --glass-reflex-light: 0.6;
+        --glass-reflex-dark: 1.2;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: rgb(255 255 255 / 0.07);
+        @include glass-edges-thumb($local: true);
+        color: rgb(250 250 247 / 0.92);
+
+        &.material-symbols-outlined { font-size: 18px; }
+    }
+
+    // ====================== RIGHT: form panel (theme-aware) =================
+    &__form-wrap {
+        padding: 32px 28px 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start; // anchor to top so tab strip never moves
+        background: var(--bg-alt);
+        color: var(--fg);
+
+        @include mq(md) { padding: 40px 56px; }
+    }
+
+    // Glass track with a thumb sliding between Entrar and Criar conta.
+    // The thumb is the ::before; its position comes from the active tab (:has),
+    // and the droplet only animates after a click (data-moved, set by main.js),
+    // otherwise it would stretch whenever the modal opens. On the "lost"/"reset"
+    // panels no tab is active and the thumb disappears.
+    &__tabs {
+        --n: 1;
+        --i: 0;
+        position: relative;
+        display: flex;
+        padding: 4px;
+        border-radius: 999px;
+        margin-bottom: 24px;
+        background: color-mix(in srgb, var(--glass-tint) 10%, transparent);
+        @include glass-edges;
+
+        &:has(> :nth-child(2)) { --n: 2; }
+        &:has([data-auth-tab="register"].is-active) { --i: 1; }
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 4px;
+            width: calc((100% - 8px) / var(--n));
+            @include glass-thumb;
+            // Brand purple instead of the neutral glass grey.
+            background: color-mix(in srgb, var(--accent) 34%, transparent);
+            translate: calc(var(--i) * 100%) 0;
+        }
+
+        &:not(:has(.is-active))::before { opacity: 0; }
+
+        &[data-moved]:has([data-auth-tab="login"].is-active)::before { animation: np-squash-a 440ms ease; transform-origin: right; }
+        &[data-moved]:has([data-auth-tab="register"].is-active)::before { animation: np-squash-b 440ms ease; transform-origin: left; }
+    }
+
+    &__tab {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 0;
+        background: transparent;
+        color: var(--fg-muted);
+        font-family: $font-display;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: color 0.2s ease;
+
+        &:hover { color: var(--fg); }
+        &.is-active { color: var(--fg); }
+    }
+
+    &__heading {
+        font-family: $font-display;
+        font-size: clamp(1.75rem, 3vw, 2.25rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 8px;
+        text-wrap: balance;
+    }
+
+    &__sub {
+        font-size: 14px;
+        color: var(--fg-muted);
+        margin: 0 0 24px;
+    }
+
+}
+
+// ============================================================================
+// Auth form (used inside the modal panel)
+// ============================================================================
+.kf-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    &__error {
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: color-mix(in srgb, #ef4444 14%, transparent);
+        color: #ef4444;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    // Confirmation (link sent, password changed). The text keeps the theme colour:
+    // pure green on a light background lacks contrast.
+    &__notice {
+        padding: 10px 14px;
+        border-radius: 8px;
+        border-left: 3px solid #22c55e;
+        background: color-mix(in srgb, #22c55e 14%, transparent);
+        color: var(--fg);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+
+    // The reset panel's fields sit in a wrapper (hidden when the link is invalid),
+    // so this repeats the form's rhythm.
+    &__group {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+
+        &[hidden] { display: none; }
+    }
+
+    &__alt {
+        align-self: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: $accent;
+        text-decoration: none;
+
+        &:hover { text-decoration: underline; }
+    }
+
+    &__field {
+        > label {
+            display: block;
+            font-family: $font-mono;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--fg-dim);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        input[type="email"],
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 20px;
+            @include glass-field;
+            font-family: $font-display;
+            font-size: 15px;
+            color: var(--fg);
+            box-sizing: border-box;
+
+            &::placeholder { color: var(--fg-dim); }
+        }
+    }
+
+    &__field-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+
+        label {
+            font-family: $font-mono;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--fg-dim);
+            font-weight: 700;
+        }
+
+        a {
+            font-size: 11px;
+            color: $accent;
+            font-weight: 600;
+            text-decoration: none;
+
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    &__pass {
+        position: relative;
+
+        input { padding-right: 50px; }
+
+        button {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            color: var(--fg-muted);
+            cursor: pointer;
+
+            &:hover { color: var(--fg); }
+
+            .material-symbols-outlined {
+                font-size: 20px;
+                line-height: 1;
+            }
+        }
+    }
+
+    &__remember {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--fg-muted);
+        cursor: pointer;
+        user-select: none;
+        margin-top: 2px;
+
+        input[type="checkbox"] {
+            accent-color: $accent;
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    &__submit {
+        @include glass-tinted($accent);
+        padding: 14px 20px;
+        border-radius: 999px;
+        font-family: $font-display;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 6px;
+
+        &:disabled { opacity: 0.6; cursor: progress; }
+    }
+}
+
+@keyframes kf-auth-fade-in  { from { opacity: 0; } }
+@keyframes kf-auth-fade-out { to   { opacity: 0; } }
+
+@keyframes kf-auth-panel-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+}
+
+@keyframes kf-auth-panel-out {
+    to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}

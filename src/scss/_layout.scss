@@ -1,0 +1,56 @@
+@use 'variables' as *;
+
+// ============================================================================
+// Outer container — page width
+// ============================================================================
+.kf-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px;
+
+    @include mq(md) {
+        padding: 0 24px;
+    }
+
+    @include mq(lg) {
+        padding: 0 32px;
+    }
+}
+
+// ============================================================================
+// Homepage 3-column grid:
+//   left rail (filters)  |  feed  |  right rail (trending/newsletter)
+// ============================================================================
+.kf-home-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 16px 0 40px;
+
+    @include mq(md) {
+        gap: 24px;
+    }
+
+    @include mq(lg) {
+        grid-template-columns: 180px 1fr 280px;
+        gap: 28px;
+        padding: 20px 0 56px;
+    }
+}
+
+.kf-feed { min-width: 0; } // prevents grid blowout on long titles
+
+// Hide left rail on mobile (filters become the horizontal scroller)
+.kf-rail-left {
+    display: none;
+    @include mq(lg) { display: block; }
+}
+
+// Right rail collapses below feed on mobile/tablet
+.kf-rail-right {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+

@@ -1,0 +1,120 @@
+// ============================================================================
+// Self-hosted fonts — no CDN call, no FOUT, no layout shift.
+// ============================================================================
+//
+// Why self-host:
+//   1. Eliminates the round-trip to fonts.googleapis.com (and the second hop
+//      to fonts.gstatic.com). Removes one third-party origin + DNS lookup,
+//      which was the main cause of the visual "jump" during initial load.
+//   2. GDPR: nothing leaves the visitor's browser to Google when the page
+//      loads. No need to mention Google Fonts in the consent banner.
+//   3. Cacheable under our own origin (long Cache-Control), no version drift.
+//
+// Why this fixes the layout jump (CLS):
+//   We declare a SECOND @font-face per family whose `src: local(...)` points
+//   to a system font, but tweaks `size-adjust`, `ascent-override`,
+//   `descent-override`, and `line-gap-override` so the fallback metrics
+//   match the web font almost exactly. The CSS then references the family
+//   stack with the *adjusted* fallback first, so paragraphs reserve the
+//   right amount of vertical space immediately — when the real woff2
+//   finishes loading and swaps in, glyphs change but line heights don't.
+//   The page no longer shifts.
+//
+// Subset choice:
+//   We ship only the `latin` subset (U+0000-00FF + U+2000-206F punctuation).
+//   That covers every glyph used in Portuguese editorial copy — including
+//   smart quotes, em dashes, ellipses — at the smallest possible cost.
+//   ~200kB total across 4 woff2 files.
+//
+// Variable fonts:
+//   Newsreader, Inter Tight and JetBrains Mono are all shipped here as
+//   variable-axis files. Each upright file covers every numeric weight,
+//   so we declare a single @font-face with `font-weight: 100 900` and let
+//   the rendering engine pick the right axis position.
+//
+// Inter Tight italic is NOT included — Google still ships it as a static
+// .woff kit (not a clean .woff2). Synthetic-oblique on the rare UI italic
+// is good enough and saves a request. Newsreader italic is included
+// (italic body copy in articles needs the proper cut).
+// ============================================================================
+//
+// Where the @font-face declarations live:
+//   The faces whose `src` is a real URL (Newsreader, Inter Tight, JetBrains
+//   Mono, Material Symbols) are NOT declared here. They're emitted inline in
+//   <head> by header.php, which builds the URL dynamically with
+//   get_template_directory_uri(). That's because the active theme directory
+//   is `newpixel` in dev but `pixelmagazine` in the production build, so a
+//   slug hardcoded in the compiled CSS would 404 on whichever one it isn't —
+//   and Material Symbols has no text fallback, so its icons would degrade to
+//   their literal ligature names ("bookmark", "person", ...). A relative
+//   url() isn't an option either: Vite would rebase/hash it at build time.
+//
+//   What stays here: the metric-matched fallback faces below, whose `src` is
+//   `local(...)` (no URL, nothing theme-relative to resolve), plus the font
+//   family stacks and the .material-symbols-outlined utility class.
+
+// ---------- Newsreader (serif body) ----------
+
+// Metric-matched fallback. While Newsreader is loading, paragraphs render
+// in Georgia but with adjusted metrics so the bounding boxes match what
+// Newsreader will occupy. No reflow when the swap happens.
+@font-face {
+    font-family: 'Newsreader Fallback';
+    font-style: normal;
+    src: local('Georgia');
+    size-adjust: 101%;
+    ascent-override: 91.5%;
+    descent-override: 24.2%;
+    line-gap-override: 0%;
+}
+@font-face {
+    font-family: 'Newsreader Fallback';
+    font-style: italic;
+    src: local('Georgia Italic'), local('Georgia');
+    size-adjust: 101%;
+    ascent-override: 91.5%;
+    descent-override: 24.2%;
+    line-gap-override: 0%;
+}
+
+// ---------- Inter Tight (display + UI) ----------
+
+// Metric-matched fallback (mirrors -apple-system / Helvetica metrics).
+@font-face {
+    font-family: 'Inter Tight Fallback';
+    font-style: normal;
+    src: local('Helvetica Neue'), local('Arial');
+    size-adjust: 100.6%;
+    ascent-override: 92.9%;
+    descent-override: 23.1%;
+    line-gap-override: 0%;
+}
+
+// ---------- JetBrains Mono (kicker pills, meta labels) ----------
+// No fallback override for the mono family — labels are short, so even if
+// the system mono shows briefly the layout impact is invisible. (The
+// url()-based @font-face is emitted by header.php — see note at top.)
+
+// ---------- Material Symbols Outlined (icon font) ----------
+//
+// The @font-face (url + `font-display: block`) is emitted by header.php so
+// its path resolves dynamically — see the note at the top of this file.
+// `font-display: block` keeps the slot empty (rather than showing the literal
+// ligature name "bookmark", "person", etc.) until the file is downloaded.
+// header.php also has inline JS that flips `html.icons-ready` once the font
+// loads, controlling visibility with a 1.2s safety timeout.
+.material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}

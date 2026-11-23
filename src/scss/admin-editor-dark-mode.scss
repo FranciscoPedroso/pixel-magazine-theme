@@ -1,0 +1,70 @@
+/**
+ * Pixel Magazine — TinyMCE content dark mode
+ *
+ * TinyMCE loads this file inside its iframe through the mce_css filter.
+ * Keep the palette aligned with admin-dark-mode.scss.
+ */
+
+  html {
+    background: #0d0b12 !important;
+    color-scheme: dark;
+  }
+
+  body#tinymce.wp-editor {
+    box-sizing: border-box;
+    min-height: 100%;
+    margin: 0;
+    padding: 18px 20px !important;
+    background: #0d0b12 !important;
+    color: #d5cede !important;
+    caret-color: #a78bfa;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  body#tinymce.wp-editor p,
+  body#tinymce.wp-editor li,
+  body#tinymce.wp-editor td,
+  body#tinymce.wp-editor th {
+    color: inherit !important;
+  }
+
+  body#tinymce.wp-editor h1,
+  body#tinymce.wp-editor h2,
+  body#tinymce.wp-editor h3,
+  body#tinymce.wp-editor h4,
+  body#tinymce.wp-editor h5,
+  body#tinymce.wp-editor h6,
+  body#tinymce.wp-editor strong {
+    color: #f4f0fa !important;
+  }
+
+  body#tinymce.wp-editor a {
+    color: #a78bfa !important;
+  }
+
+  body#tinymce.wp-editor blockquote {
+    margin-left: 0;
+    padding-left: 16px;
+    border-left: 3px solid #a78bfa;
+    color: #a79bb8 !important;
+  }
+
+  body#tinymce.wp-editor code,
+  body#tinymce.wp-editor pre {
+    background: #191522 !important;
+    color: #c4b5fd !important;
+  }
+
+  body#tinymce.wp-editor table,
+  body#tinymce.wp-editor td,
+  body#tinymce.wp-editor th,
+  body#tinymce.wp-editor hr {
+    border-color: #5a4b76 !important;
+  }
+
+  body#tinymce.wp-editor ::selection {
+    background: #a78bfa;
+    color: #171020;
+  }

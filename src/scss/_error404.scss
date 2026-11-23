@@ -1,0 +1,25 @@
+@use 'variables' as *;
+
+// ============================================================================
+// 404 — page not found. Layout reuses .kf-browse (head + list); this only
+// tweaks the intro copy typeface and the "recent articles" sub-heading.
+// (No inline search field — the header search is enough.)
+// ============================================================================
+.kf-404 {
+
+    // Match the single-article dek typeface (Inter Tight / $font-sans) instead
+    // of the serif that .kf-browse__copy uses by default.
+    &__copy {
+        font-family: $font-sans;
+    }
+
+    &__recent-title {
+        font-family: $font-display;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin: 48px 0 16px;
+    }
+}

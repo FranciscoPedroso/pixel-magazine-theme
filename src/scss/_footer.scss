@@ -1,0 +1,98 @@
+@use 'variables' as *;
+
+.site-footer {
+    border-top: 1px solid var(--rule);
+    background: var(--bg);
+    padding: 40px 0 32px;
+    color: var(--fg-muted);
+}
+
+.site-footer__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+
+    // Three columns from tablet up: brand takes more visual weight (2fr) so
+    // the eye lands there first; the two link columns sit side-by-side on
+    // the right with equal narrow widths. Categories were intentionally cut
+    // because the header nav + home left rail already surface the pillars,
+    // and a tall sub-category list here was making the footer asymmetric.
+    @include mq(md) {
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 48px;
+        align-items: start;
+    }
+
+    // Once there's enough room (large desktops), push the link columns
+    // further to the right by widening the brand column even more — feels
+    // more editorial-magazine and less utility-bar.
+    @include mq(lg) {
+        grid-template-columns: 2.4fr 1fr 1fr;
+        gap: 56px;
+    }
+}
+
+.site-footer__col {
+    h5 {
+        font-family: $font-mono;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin: 0 0 14px;
+    }
+
+    ul { display: flex; flex-direction: column; gap: 8px; }
+
+    a {
+        color: var(--fg-muted);
+        font-size: 13px;
+        transition: color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+
+        &:hover { color: var(--fg); }
+    }
+}
+
+.site-footer__brand {
+    .site-brand--footer {
+        display: inline-flex;
+        color: var(--fg);
+        text-decoration: none;
+    }
+
+    .kf-logo--footer {
+        display: block;
+        width: 110px;
+        height: auto;
+        color: var(--fg);
+    }
+
+    p {
+        margin: 12px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.5;
+        max-width: 290px;
+        color: var(--fg-muted);
+    }
+}
+
+.site-footer__bottom {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule-soft);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    justify-content: space-between;
+    font-family: $font-mono;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+}

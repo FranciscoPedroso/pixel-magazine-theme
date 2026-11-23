@@ -1,0 +1,186 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// GDPR consent banner — rendered by inc/gdpr.php, revealed by inline JS only
+// when the visitor's country is in the consent zone and there's no prior
+// decision in localStorage. Pinned to the bottom of the viewport with a
+// very high z-index so it stays above everything until the visitor decides.
+// ============================================================================
+.kf-gdpr {
+    position: fixed;
+    // `bottom: 0` (via inset) is already anchored to the *visual* viewport
+    // bottom by modern mobile Chrome, so it sits correctly whether the URL
+    // bar is shown or hidden. Any extra dvh/lvh offset only pushes it up and
+    // makes it "float" while the bar is visible — don't add one.
+    // Floating glass sheet, kept off the edges. Frost only: refraction over
+    // an area this size, repainting on scroll, would be expensive.
+    inset: auto 8px 8px 8px;
+    z-index: 9999;
+    border-radius: 20px;
+    // 84%: this is text to read, and it passes over photos.
+    background: color-mix(in srgb, var(--bg-alt) 84%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    @include glass-edges;
+
+    @include mq(md) { inset: auto 16px 16px 16px; }
+
+    @media (prefers-reduced-transparency: reduce) {
+        background: var(--bg-alt);
+    }
+
+    // Hidden by default; JS removes the `hidden` attribute when needed.
+    &[hidden] { display: none; }
+
+    // Smooth slide-up the first time the banner appears.
+    &.is-visible {
+        animation: kf-gdpr-slide-up 0.4s cubic-bezier(.2, .8, .3, 1);
+    }
+
+    &__inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        // Tighter padding and line spacing on mobile, so the banner doesn't cover
+        // a quarter of the screen on the first visit.
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        @include mq(md) {
+            padding: 18px 32px;
+            flex-direction: row;
+            align-items: center;
+            gap: 28px;
+        }
+    }
+
+    &__text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        @include mq(md) { gap: 8px; }
+    }
+
+    &__copy {
+        margin: 0;
+        font-family: $font-sans;
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--fg-muted);
+
+        @include mq(md) { font-size: 14px; }
+    }
+
+    // Stand-alone link below the copy. Sits on its own row (block-level
+    // inline-flex) so it doesn't compete with the body text for attention,
+    // and so the eye lands on it clearly as the "learn more" affordance.
+    // Same dotted-underline aesthetic as inline article links, just
+    // smaller and decoupled from the paragraph.
+    &__link {
+        align-self: flex-start;          // keeps hover/underline tight to the text
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: $font-sans;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--fg);
+        text-decoration: underline;
+        text-decoration-color: var(--rule);
+        text-underline-offset: 4px;
+        transition: text-decoration-color 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
+
+        @include mq(md) { font-size: 13px; }
+
+        &-arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            color: var(--accent);
+            text-decoration-color: var(--accent);
+
+            .kf-gdpr__link-arrow { transform: translateX(2px); }
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+            border-radius: 2px;
+        }
+    }
+
+    &__eyebrow {
+        display: block;
+        font-family: $font-mono;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 4px;
+    }
+
+    &__actions {
+        display: inline-flex;
+        gap: 8px;
+        flex-shrink: 0;
+
+        @include mq(md) {
+            gap: 10px;
+        }
+    }
+
+    &__btn {
+        font-family: $font-mono;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        border-radius: $radius-pill;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--fg);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease,
+                    color 0.2s ease, transform 0.2s ease;
+        white-space: nowrap;
+
+        @include mq(md) {
+            padding: 11px 22px;
+            font-size: 12px;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        &--reject {
+            @include glass-chip;
+            color: var(--fg-muted);
+
+            &:hover { color: var(--fg); }
+        }
+
+        &--accept {
+            @include glass-tinted(var(--fg));
+
+            &:hover { --tint: var(--accent); }
+        }
+    }
+}
+
+@keyframes kf-gdpr-slide-up {
+    from { transform: translateY(100%); opacity: 0.6; }
+    to   { transform: translateY(0);    opacity: 1; }
+}

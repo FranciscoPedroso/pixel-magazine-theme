@@ -1,0 +1,26 @@
+{
+    "key": "ui_options_page_frontpage_layout",
+    "title": "Frontpage Layout",
+    "active": true,
+    "menu_order": 0,
+    "page_title": "Frontpage Layout",
+    "menu_slug": "frontpage-layout",
+    "parent_slug": "none",
+    "advanced_configuration": 1,
+    "icon_url": "",
+    "menu_title": "Frontpage Layout",
+    "position": "5.5",
+    "redirect": 0,
+    "description": "Curate which posts appear in each slot on the front page (lead, feature pair, opinion, three-up). Empty slots auto-fill with the most recent posts.",
+    "menu_icon": {
+        "type": "dashicons",
+        "value": "dashicons-layout"
+    },
+    "update_button": "Save layout",
+    "updated_message": "Frontpage layout saved.",
+    "capability": "edit_posts",
+    "data_storage": "options",
+    "post_id": "",
+    "autoload": 0,
+    "modified": 1747500000
+}

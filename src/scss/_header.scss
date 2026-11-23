@@ -1,0 +1,527 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// Refractive glass bar (Chromium): content passing underneath bends at the
+// bottom edge, like iOS 26 bars. Outside Chromium it's a stronger frost, to
+// make up for the missing lens.
+//
+// Note: the glass lives on ::before, not on the header itself. An element with
+// backdrop-filter is a "backdrop root": its children would only see the header,
+// never the page, and the search, selector and buttons would have nothing to
+// refract. With the filter on a sibling layer behind them, each child sees the
+// page already refracted by the bar and bends it again at its own edges: glass
+// on glass. The header must not get its own opacity, filter, mask or
+// backdrop-filter.
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--rule);
+    box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--glass-dark) calc(var(--glass-reflex-dark) * 12%), transparent);
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        // No lens (Safari, Firefox, low-RAM Android): frost only. WebKit rejects
+        // SVG filters in backdrop-filter, so content can't be bent there.
+        background: color-mix(in srgb, var(--bg) 72%, transparent);
+        box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * 30%), transparent);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        backdrop-filter: blur(16px) saturate(180%);
+
+        // With the lens, far less frost: the effect is seeing sharp content bend.
+        // The 62% veil is what keeps the header readable on top.
+        :root.lg-refract & {
+            background: color-mix(in srgb, var(--bg) 62%, transparent);
+            backdrop-filter: blur(3px) url(#np-glass-bar) saturate(180%);
+        }
+
+        @media (prefers-reduced-transparency: reduce) {
+            background: var(--bg);
+        }
+    }
+}
+
+.site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+
+    @include mq(md) {
+        padding: 16px 24px;
+        gap: 24px;
+    }
+
+    @include mq(lg) {
+        padding: 20px 32px;
+        gap: 32px;
+    }
+}
+
+// PIXEL· wordmark + edition
+.site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    color: var(--fg);
+    text-decoration: none;
+}
+
+// ============================================================================
+// Brand wordmark (inline SVG). Sizing is controlled per-placement so a single
+// SVG asset is reused across header, footer, auth modal etc.
+// ============================================================================
+.kf-logo {
+    display: block;
+    height: auto;
+    color: var(--fg); // currentColor target — adapts to theme tokens
+
+    &--header {
+        width: 90px;
+        @include mq(md) { width: 110px; }
+    }
+}
+
+.site-edition {
+    display: none;
+    font-family: $font-mono;
+    font-size: 11px;
+    color: var(--fg-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    @include mq(md) { display: inline; }
+}
+
+// Search field (Algolia/cmd-k style inline form — submits to WP native search)
+.site-search {
+    // Inline pill from md up; below that, a fading layer (see the end of this
+    // block).
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+    max-width: 380px;
+    padding: 7px 14px;
+    // Glass well: the header shows through it instead of an opaque block.
+    // Focus lights a ring in the brand colour over the edges.
+    border: 0;
+    border-radius: $radius-pill;
+    background: color-mix(in srgb, var(--glass-tint) 10%, transparent);
+    @include glass-edges-thumb;
+    font-size: 12px;
+    color: var(--fg-muted);
+    transition: background-color 0.2s ease;
+
+    @include glass-lens(np-glass-wide, 2px);
+
+    &:hover { background: color-mix(in srgb, var(--glass-tint) 16%, transparent); }
+    &:focus-within { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 1px; }
+
+    // Below md the search is a glass pill floating just under the header bar,
+    // opened by the .site-search-toggle button: the same shape as the site's other
+    // fields (glass-field), kept off the edges like the cookie banner. .site-header
+    // is `position: sticky`, so it serves as the positioning context.
+    // It stays mounted and fades in/out: `visibility` (delayed on exit) removes it
+    // from focus and touch while closed.
+    @media (max-width: 767.98px) {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 12px;
+        right: 12px;
+        max-width: none;
+        min-height: 44px;
+        margin: 0;
+        padding: 4px 6px 4px 14px;
+        gap: 8px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 200ms ease, visibility 0s linear 200ms;
+        box-shadow:
+            var(--np-glass-edges),
+            0 10px 28px -8px rgb(0 0 0 / 0.3);
+
+        // Same glass as the header. No lens (Safari, Firefox, low RAM): strong
+        // frost. With lens: lighter veil and little blur, so content can be seen
+        // bending at the edges. :hover sticks after a tap, so it gets the same
+        // background.
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        backdrop-filter: blur(16px) saturate(180%);
+        &, &:hover { background: color-mix(in srgb, var(--bg) 66%, transparent); }
+
+        :root.lg-refract & {
+            backdrop-filter: blur(3px) url(#np-glass-wide) saturate(180%);
+            &, &:hover { background: color-mix(in srgb, var(--bg) 46%, transparent); }
+        }
+
+        @media (prefers-reduced-transparency: reduce) {
+            &, &:hover,
+            :root.lg-refract &,
+            :root.lg-refract &:hover { background: var(--bg-alt); }
+        }
+
+        :root[data-search-open] & {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 200ms ease, visibility 0s;
+        }
+
+        .site-search__icon { font-size: 20px; }
+
+        // 16px: below this, iOS Safari zooms the page on focus.
+        .site-search__input { font-size: 16px; }
+
+        .site-search__submit {
+            width: 32px;
+            height: 32px;
+
+            .material-symbols-outlined { font-size: 20px; }
+        }
+    }
+
+    // Material Symbols, like the mobile button and the submit arrow; the "⌕"
+    // character renders tiny in most fonts.
+    &__icon {
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    &__input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        color: var(--fg);
+        font-family: inherit;
+        font-size: 12px;
+        padding: 0;
+        outline: none;
+
+        // Suppress the global accessibility focus ring on this input — the
+        // pill-shaped form takes over via `.site-search:focus-within`.
+        &:focus-visible { outline: none; }
+
+        &::placeholder { color: var(--fg-muted); }
+
+        // Remove the native search clear button (we don't need it visually)
+        &::-webkit-search-cancel-button { -webkit-appearance: none; }
+    }
+
+    // Explicit submit at every size. Deliberately discreet: it keeps the
+    // placeholder's muted tone and only gains colour on hover or focus, so it
+    // doesn't compete with the header's content.
+    &__submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: $radius-pill;
+        background: transparent;
+        color: var(--fg-dim);
+        cursor: pointer;
+        transition: color 0.2s ease, background-color 0.2s ease;
+
+        .material-symbols-outlined { font-size: 17px; }
+
+        &:hover,
+        &:focus-visible {
+            color: var(--fg);
+            background: color-mix(in srgb, var(--glass-tint) 24%, transparent);
+        }
+    }
+
+    // Only makes sense on the full-width layer; the inline pill closes with Esc.
+    &__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--fg-muted);
+        cursor: pointer;
+
+        .material-symbols-outlined { font-size: 20px; }
+        &:hover { color: var(--fg); }
+
+        @include mq(md) { display: none; }
+    }
+}
+
+// Opens the search layer on narrow screens. Designed to match
+// .site-theme-toggle so the header keeps the same icon rhythm.
+.site-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    @include glass-button;
+    cursor: pointer;
+
+    .material-symbols-outlined { font-size: 20px; }
+
+    // From md up the inline pill takes over and this button has no purpose.
+    @include mq(md) { display: none; }
+}
+
+// Right cluster: login + Subscribe + theme toggle
+.site-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    @include mq(md) { gap: 14px; }
+}
+
+// "Entrar | Junta-te" capsule (visitors): a single glass object, like the theme
+// selector beside it. "Entrar" is text on the track; "Junta-te" is a purple
+// glass thumb inside it, so the action that brings sign-ups stands out without
+// looking like a button from another family. Below md only "Junta-te" exists.
+.site-auth {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: $radius-pill;
+    background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+    @include glass-edges;
+    @include glass-lens;
+}
+
+.site-login,
+.site-join {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 14px;
+    border-radius: $radius-pill;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.site-login {
+    display: none;
+    color: var(--fg-muted);
+
+    @include mq(md) { display: inline-flex; }
+
+    &:hover { color: var(--fg); }
+}
+
+.site-join {
+    // Same recipe as the sliding thumbs (glass-thumb), tinted purple.
+    @include glass-thumb;
+    background: color-mix(in srgb, var(--accent) 34%, transparent);
+    color: var(--fg);
+
+    &:hover { background: color-mix(in srgb, var(--accent) 44%, transparent); }
+}
+
+// Circular icon-only header link (used for the "my profile" entry-point).
+// Matches .site-theme-toggle visually so the two icon buttons read as a pair.
+.site-iconlink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    @include glass-button;
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        line-height: 1;
+    }
+}
+
+// "Junta-te" / "Guardados": the same glass track as the theme selector:
+// transparent, specular edges and (on Chromium) the lens over the header.
+// Hover only adds shine, with no zoom.
+.site-subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: $radius-pill;
+    background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+    @include glass-edges;
+    @include glass-lens;
+    color: var(--fg);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+
+    &:hover { background: color-mix(in srgb, var(--glass-tint) 22%, transparent); }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--fg) 12%, transparent);
+        color: var(--fg);
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+    }
+}
+
+.site-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    @include glass-button;
+
+    // From md up the glass selector (.np-theme-switch) takes over.
+    @include mq(md) { display: none; }
+
+    // Three icons live in the DOM; CSS shows the one matching the current
+    // theme mode (auto / light / dark) tagged on <html data-theme-mode="…">.
+    // No JS swap needed — boot script sets the attribute synchronously.
+    .material-symbols-outlined {
+        font-size: 18px;
+        display: none;
+    }
+}
+
+:root[data-theme-mode="auto"]  .site-theme-toggle [data-icon="auto"],
+:root[data-theme-mode="light"] .site-theme-toggle [data-icon="light"],
+:root[data-theme-mode="dark"]  .site-theme-toggle [data-icon="dark"] {
+    display: inline-flex;
+}
+
+// Fallback: if data-theme-mode isn't set yet (e.g. JS disabled), show the
+// auto/contrast icon so the button still has a glyph.
+:root:not([data-theme-mode]) .site-theme-toggle [data-icon="auto"] {
+    display: inline-flex;
+}
+
+
+// ============================================================================
+// Glass theme selector (≥ md) — Light · Auto · Dark
+// ============================================================================
+// A glass track with a thumb that slides to the chosen option and stretches
+// like a droplet on the way. Its position comes only from CSS
+// (:root[data-theme-mode]), set by the boot script before first paint, so
+// nothing jumps on load. The JS marks the radio and data-dir.
+//
+// The track has its own lens (glass-lens): it sees the page already refracted
+// by the bar and bends it again at its edges. See the note on .site-header.
+.np-theme-switch {
+    --opt: 34px;
+    --i: 1;
+    position: relative;
+    display: none;
+    margin: 0;
+    padding: 3px;
+    border: 0;
+    border-radius: $radius-pill;
+    background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+    @include glass-edges;
+    transition: background-color 400ms cubic-bezier(1, 0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
+    @include glass-lens;
+
+    @include mq(md) { display: inline-flex; }
+
+    &__opt {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--opt);
+        height: 30px;
+        border-radius: $radius-pill;
+        color: var(--fg-muted);
+        cursor: pointer;
+        transition: color 160ms ease;
+
+        .material-symbols-outlined { font-size: 18px; }
+
+        // Hover: the icon just lights up (from muted to the text colour).
+        &:hover { color: var(--fg); }
+
+        &:has(:checked) { color: var(--fg); cursor: default; }
+
+        &:has(:focus-visible) {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+    }
+
+    // Hidden but focusable radio: arrow keys change the theme.
+    &__input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &__thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: var(--opt);
+        height: 30px;
+        border-radius: $radius-pill;
+        background: color-mix(in srgb, var(--glass-tint) 36%, transparent);
+        @include glass-edges-thumb;
+        translate: calc(var(--i) * var(--opt)) 0;
+        transition:
+            translate 400ms cubic-bezier(1, 0, 0.4, 1),
+            background-color 400ms cubic-bezier(1, 0, 0.4, 1),
+            box-shadow 400ms cubic-bezier(1, 0, 0.4, 1);
+    }
+
+    // The droplet stretches from its trailing edge.
+    &[data-dir="right"] &__thumb { transform-origin: left; }
+    &[data-dir="left"]  &__thumb { transform-origin: right; }
+}
+
+:root[data-theme-mode="light"] .np-theme-switch { --i: 0; }
+:root[data-theme-mode="dark"]  .np-theme-switch { --i: 2; }
+
+// One animation name per target: changing the name is what restarts it.
+:root[data-theme-mode="light"] .np-theme-switch[data-dir] .np-theme-switch__thumb { animation: np-squash-a 440ms ease; }
+:root[data-theme-mode="auto"]  .np-theme-switch[data-dir] .np-theme-switch__thumb { animation: np-squash-b 440ms ease; }
+:root[data-theme-mode="dark"]  .np-theme-switch[data-dir] .np-theme-switch__thumb { animation: np-squash-c 440ms ease; }
+
+@keyframes np-squash-a { 50% { scale: 1.3 0.92; } }
+@keyframes np-squash-b { 50% { scale: 1.3 0.92; } }
+@keyframes np-squash-c { 50% { scale: 1.3 0.92; } }
+
+// Round header buttons: same lens as the selector. Only here, since the same
+// buttons in articles sit on a flat background where refraction doesn't show.
+.site-search-toggle,
+.site-iconlink,
+.site-theme-toggle {
+    @include glass-lens;
+}

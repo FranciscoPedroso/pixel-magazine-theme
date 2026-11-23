@@ -1,0 +1,44 @@
+@use 'variables' as *;
+
+// ============================================================================
+// kf-* hover micro-interactions
+// (Most are inlined into component partials; these are the leftovers that
+// don't naturally belong to a single component.)
+// ============================================================================
+
+// Smooth fade-in for cards as they enter viewport (optional progressive enhancement)
+@media (prefers-reduced-motion: no-preference) {
+    .kf-card,
+    .kf-opinion {
+        animation: kf-fade-up 0.4s cubic-bezier(.2, .8, .3, 1) backwards;
+    }
+}
+
+@keyframes kf-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Theme change (setThemeMode in main.js): the new theme opens in a circle from
+// the pressed button. The circle is animated in JS; this only disables the
+// default View Transitions cross-fade, which would run through it.
+:root[data-theme-reveal]::view-transition-old(root),
+:root[data-theme-reveal]::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+// Reduced-motion fallback — kill all animations
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

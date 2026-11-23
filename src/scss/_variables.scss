@@ -1,0 +1,186 @@
+@use 'sass:map';
+
+// ============================================================================
+// Design tokens
+// ============================================================================
+
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 16px;
+$radius-pill: 999px;
+
+$breakpoints: (
+    sm: 600px,
+    md: 768px,
+    lg: 1024px,
+    xl: 1280px
+);
+
+@mixin mq($size) {
+    @if map.has-key($breakpoints, $size) {
+        @media (min-width: map.get($breakpoints, $size)) {
+            @content;
+        }
+    } @else {
+        @warn "Invalid breakpoint: #{$size}.";
+    }
+}
+
+// ============================================================================
+// Typography
+// ============================================================================
+// Each stack lists the real web font first, then a metric-adjusted fallback
+// family declared in _fonts.scss (e.g. "Inter Tight Fallback"). The fallback
+// pulls from a local system font but applies size-adjust / ascent-override
+// so the bounding boxes match the web font's. The result: while the woff2
+// is loading we render in the fallback, but text occupies the same vertical
+// space — when the swap happens there's no layout shift. After the system
+// fallback we still keep the bare system names as a final safety net.
+$font-display: 'Inter Tight', 'Inter Tight Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-sans:    'Inter Tight', 'Inter Tight Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-serif:   'Newsreader', 'Newsreader Fallback', Charter, Georgia, serif;
+$font-mono:    ui-monospace, 'SF Mono', Menlo, Monaco, 'Cascadia Mono', 'JetBrains Mono', monospace;
+
+// ============================================================================
+// Category palette — exactly as defined in shared.jsx
+// Use these as accents, badge colours, dot colours, rank numerals
+// ============================================================================
+$cat-ia:        #a78bfa; // lavender
+$cat-hardware:  #f97316; // orange
+$cat-software:  #22d3ee; // cyan
+$cat-apple:     #ef4444; // red
+$cat-games:     #10b981; // emerald
+$cat-reviews:   #fbbf24; // amber
+$cat-tutorials: #ec4899; // pink
+$cat-opinion:   #94a3b8; // slate
+$cat-audio:     #ec4899; // (pink, alias)
+$cat-wearables: #10b981; // (emerald, alias)
+$cat-fallback:  #94a3b8;
+
+// Brand accent — used for "PIXEL·" wordmark dot, hero dot, newsletter button, pull quote rule
+$accent: $cat-ia;
+
+// Status
+$status-live:    #10b981;
+
+// ============================================================================
+// Category pill — single source of truth for the pill aesthetic so the same
+// look is reused across cards, the filter rail, the mobile cat scroller, and
+// the compact "mais artigos" list. Each call site composes its own layout
+// (count badge, hover behaviour, etc.) on top of this base.
+// ============================================================================
+@mixin pill-base {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    // Glass tinted in the category colour: the same 14% veil, plus a top sheen,
+    // bottom edge and a halo in that colour. Highlights follow --glass-reflex-light,
+    // so the shine stays discreet in dark mode. The --glass-* tokens come from
+    // _tokens.scss; the chip over the lead image overrides them.
+    // The recipe is written once; the lit state (hover, active) only changes the
+    // numbers in --pill-* (see pill-lit), saving ~3 KB over repeating it per state.
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * var(--pill-gloss, 22%)), transparent), transparent 65%),
+        color-mix(in srgb, var(--c, var(--accent)) var(--pill-mix, 14%), transparent);
+    box-shadow:
+        inset 0 1px 0 color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * var(--pill-hl, 60%)), transparent),
+        inset 0 0 6px -2px color-mix(in srgb, var(--glass-light) calc(var(--glass-reflex-light) * var(--pill-glow, 35%)), transparent),
+        inset 0 -1px 1px -0.5px color-mix(in srgb, var(--c, var(--accent)) var(--pill-edge, 18%), transparent),
+        0 var(--pill-halo-y, 2px) var(--pill-halo-b, 6px) -2px color-mix(in srgb, var(--c, var(--accent)) var(--pill-halo, 30%), transparent);
+    color: var(--c, var(--accent));
+    font-family: $font-mono;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: none;
+    line-height: 1.2;
+    white-space: nowrap;
+    outline: 1px solid transparent;
+    outline-offset: 0;
+    transition: outline-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+// Active pill (the current category filter): the glass lights up instead of
+// gaining an outline, with more colour, shine and a stronger halo. The outline
+// is reserved for keyboard focus (:focus-visible), for accessibility.
+@mixin pill-lit($mix: 24%) {
+    --pill-mix: #{$mix};
+    --pill-gloss: 32%;
+    --pill-hl: 75%;
+    --pill-glow: 45%;
+    --pill-edge: 24%;
+    --pill-halo: 45%;
+    --pill-halo-y: 4px;
+    --pill-halo-b: 12px;
+}
+
+// Hover: just a little more shine. No zoom, no colour or halo change.
+@mixin pill-hover {
+    &:hover,
+    &:focus-visible {
+        --pill-gloss: 34%;
+        --pill-hl: 85%;
+        --pill-glow: 50%;
+    }
+}
+
+// Dot used inside pills (existing markup uses spans, but new call sites can
+// use this via ::before pseudo-element).
+@mixin pill-dot($size: 5px) {
+    content: '';
+    display: inline-block;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+    background: var(--c, var(--accent));
+    flex-shrink: 0;
+}
+
+// ============================================================================
+// Stretched link overlay — used across all "card row is fully clickable"
+// patterns (cards, more list, week sidebar, browse archive). The parent
+// must be position: relative so the ::after takes its inset:0 from there;
+// the pill (or other foreground action) lifts above with z-index: 2.
+// ============================================================================
+@mixin stretched-link-overlay {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+// ============================================================================
+// Underline-grow hover — soft background-gradient that animates from 0 to
+// 100% width when the parent is hovered. The thickness defaults to 1.5px
+// (cards/browse) but compact lists use 1px.
+//
+// Usage:
+//   .my-title { @include underline-grow; }
+//   .my-row:hover .my-title { background-size: 100% 1.5px; }
+// ============================================================================
+@mixin underline-grow($thickness: 1.5px) {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 $thickness;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.35s cubic-bezier(.2, .8, .3, 1);
+    display: inline;
+}
+
+// ============================================================================
+// Surface tokens — light theme defaults
+// (dark theme is overridden below via :root.dark)
+// ============================================================================
+$bg:        #fafaf7;  // page background — warm off-white
+$bg-alt:    #ffffff;  // card background
+$bg-accent: #111111;  // dark CTA surface (e.g. Subscrever button)
+$fg:        #0a0a0a;  // primary text
+$fg-muted:  #525252;  // secondary text / dek / meta
+$fg-dim:    #6b6b6b;  // tertiary text / mono metadata — was #a3a3a3 (only ~2.4:1 on #fafaf7, failed WCAG AA); #6b6b6b ≈ 5.1:1
+$rule:      rgba(0, 0, 0, 0.10);  // borders, dividers
+$rule-soft: rgba(0, 0, 0, 0.05);  // softer dividers between list rows
+$inv-fg:    #fafaf7;  // text colour on dark surfaces (newsletter card, CTA)

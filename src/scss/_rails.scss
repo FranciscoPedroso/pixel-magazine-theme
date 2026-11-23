@@ -1,0 +1,57 @@
+@use 'variables' as *;
+
+// ============================================================================
+// Left filter rail — categories with dot + count, then AO VIVO callout
+// ============================================================================
+.kf-filter-rail {
+    position: sticky;
+    top: 100px; // below sticky header
+    align-self: start;
+}
+
+.kf-filter-eyebrow {
+    font-family: $font-mono;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--fg-dim);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.kf-filter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+// The row is just a layout wrapper (pill on the left, count on the right).
+// Only the pill (.kf-filter-item__name) is the clickable link — hover and
+// click stay confined to the pill area so the count is decorative metadata.
+.kf-filter-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 4px;
+
+    &__name {
+        @include pill-base;
+
+        @include pill-hover;
+
+        &:focus-visible { outline-color: var(--c, var(--accent)); }
+    }
+
+    // Existing markup keeps a separate dot span — give it the same look as
+    // .kf-pill__dot so all dots in the site are identical.
+    &__dot { @include pill-dot; }
+
+    &__count {
+        font-size: 10px;
+        color: var(--fg-dim);
+        font-family: $font-mono;
+    }
+
+    &.is-active &__name { @include pill-lit(26%); }
+}
+

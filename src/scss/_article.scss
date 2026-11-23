@@ -1,0 +1,622 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// Article (single post) layout
+// ============================================================================
+.kf-article {
+    // 860 container with 40px gutters on desktop = 780px content column,
+    // giving long-form copy (.prose, 21px Newsreader) a touch more width
+    // while staying in the comfortable reading range.
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px 16px;
+
+    @include mq(md) { padding: 32px 32px 16px; }
+    @include mq(lg) { padding: 32px 40px 16px; }
+
+    &__head {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    &__title {
+        text-align: center;
+    }
+
+    &--body {
+        padding-top: 0;
+        // Extra breathing room below the share row before the comments
+        // slab begins — makes the transition feel deliberate, not abrupt.
+        padding-bottom: 48px;
+    }
+
+    &__meta-mono {
+        font-family: $font-mono;
+        font-size: 11px;
+        color: var(--fg-dim);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    &__title {
+        font-family: $font-display;
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        // Looser leading on mobile so a multi-line wrapped title doesn't feel
+        // cramped; tightens back to 1 on desktop where lines are wider.
+        line-height: 1.08;
+        // No max-width: the title spans the full .kf-article column.
+        // `text-wrap: balance` still keeps long titles from leaving a single
+        // word stranded on the last line.
+        margin: 0 auto 14px;
+        text-wrap: balance;
+        color: var(--fg);
+        font-size: clamp(2rem, 6vw, 3.5rem); // 32 → 56
+
+        @include mq(md) { line-height: 1; }
+    }
+
+    &__dek {
+        // Sits BELOW the body size so it doesn't compete with the H1 as a
+        // "second title". The muted color + the position do the visual
+        // distinguishing — the dek is a subordinate hook, not a headline.
+        //
+        // Centered to mirror the title's axis (symmetric block). `text-wrap:
+        // balance` evens out line lengths so the centred multi-line layout
+        // doesn't leave one short line on the bottom. No max-width: shares the
+        // full .kf-article column with the title.
+        font-size: clamp(1rem, 1.5vw, 1.125rem); // 16 → 18
+        line-height: 1.55;
+        color: var(--fg-muted);
+        margin: 0 auto 18px;
+        text-align: center;
+        text-wrap: balance;
+    }
+
+    &__byline {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--c, var(--accent)), $cat-tutorials);
+            flex-shrink: 0;
+        }
+
+        &__info {
+            flex: 1;
+            font-size: 13px;
+
+            .author-name { font-weight: 700; color: var(--fg); }
+            .author-role { color: var(--fg-muted); font-size: 12px; }
+        }
+    }
+
+    &__hero {
+        max-width: 1080px;
+        // Tight top margin: the byline border-bottom already provides a clear
+        // separator from the header block, so the hero can sit close to it.
+        // Bottom margin is independent of whether a figcaption exists —
+        // the caption is inside the <figure>, so the outer edge moves with
+        // it. Result: consistent breathing room before the body starts.
+        margin: 4px auto 40px;
+        padding: 0 16px;
+
+        @include mq(md) { padding: 0 24px; }
+        @include mq(lg) { padding: 0 32px; }
+
+        // Round the hero so it picks up the same surface language as the
+        // lead card on the homepage (both are the largest visual block of
+        // their respective views). Clip the inner <img> / placeholder
+        // through the wrapper so the corners look clean regardless of source.
+        .kf-imgwrap--hero {
+            border-radius: $radius-xl;
+            overflow: hidden;
+        }
+
+        figcaption {
+            font-size: 12px;
+            color: var(--fg);
+            padding: 8px 4px 0;
+            text-align: center;
+            font-family: $font-serif;
+        }
+    }
+}
+
+// Action toolbar (Partilhar / Guardar / Imprimir)
+.kf-article-actions {
+    display: flex;
+    gap: 4px;
+
+    // Save / share: the same glass buttons as the header.
+    button,
+    a {
+        @include glass-button;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        color: var(--fg-muted);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+
+        .material-symbols-outlined {
+            font-size: 18px;
+            font-variation-settings: 'wght' 400;
+        }
+
+        // "Share on X" (admin) uses an SVG glyph, not a font icon: explicit size.
+        &.kf-x-share svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        &[data-on] {
+            color: var(--c, var(--accent));
+            background: color-mix(in srgb, var(--c, var(--accent)) 16%, transparent);
+            .material-symbols-outlined { font-variation-settings: 'wght' 700, 'FILL' 1; }
+        }
+    }
+}
+
+// ============================================================================
+// Listen-to-article button — pill CTA at the top of .kf-article--body when
+// an audio/video version URL is set in the post's ACF field.
+// ============================================================================
+.kf-listen-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 32px;
+    padding: 12px 18px 12px 14px;
+    @include glass-chip;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg);
+    text-decoration: none;
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        color: var(--c, var(--accent));
+        font-variation-settings: 'wght' 500;
+    }
+
+    &__arrow {
+        margin-left: 2px;
+        transition: transform 0.2s ease;
+    }
+
+    &:hover {
+        .kf-listen-btn__arrow { transform: translateX(2px); }
+    }
+}
+
+// ============================================================================
+// Drop cap for first paragraph of article body.
+//
+// Sized to span roughly 3 body lines (88px ≈ 3 × 30px line-height) so it
+// reads as a confident magazine opener instead of an apologetic accent.
+//
+// Scoped to articles only — static pages (privacy policy, sobre, contactos)
+// add `kf-article--page` on the wrapper and opt out of the drop cap, since
+// they tend to open with short utilitarian paragraphs where a giant capital
+// looks out of place.
+// ============================================================================
+.kf-article:not(.kf-article--page) .prose > p:first-of-type::first-letter {
+    float: left;
+    font-family: $font-display;
+    // Sized so the cap tucks into ~2 lines of body: against the mobile body
+    // (18px/1.6 → 28.8px line) at 52px, and against the desktop body
+    // (21px/1.65 → 34.65px line) at 64px below.
+    font-size: 52px;
+    line-height: 0.85;
+    font-weight: 900;
+    padding-right: 12px;
+    padding-top: 6px;
+    color: var(--accent);
+
+    @include mq(md) { font-size: 64px; }
+}
+
+// ============================================================================
+// Inline images inside the body — see inc/content.php for the markup rewrite.
+//
+// Default: image fills the full prose column (max 720px), preserves the
+// original aspect ratio, lazy-loaded with a proper srcset.
+// `--wide` modifier breaks out beyond the text column on tablet+ for impact.
+// ============================================================================
+.prose .kf-prose-figure {
+    margin: 40px 0;
+
+    img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: $radius-md;
+        background: var(--rule-soft); // soft placeholder while loading
+        margin: 0;
+    }
+
+    figcaption {
+        font-family: $font-serif;
+        font-size: 12px;
+        color: var(--fg);
+        padding: 8px 4px 0;
+        margin: 0;
+        text-align: center;
+    }
+}
+
+// Wide breakout — pulls the figure beyond the .kf-article 720px column on
+// tablet/desktop. Mobile stays full-width within the prose like the default.
+.prose .kf-prose-figure--wide {
+    @include mq(md) {
+        margin-left: -64px;
+        margin-right: -64px;
+    }
+
+    @include mq(lg) {
+        margin-left: -120px;
+        margin-right: -120px;
+    }
+}
+
+// ============================================================================
+// Score callout — review meta (8.5 / 10 + verdict)
+// ============================================================================
+.kf-score {
+    background: var(--bg-alt);
+    border: 1px solid var(--rule);
+    border-radius: $radius-xl;
+    padding: 24px;
+    margin-bottom: 36px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-items: center;
+
+    @include mq(sm) {
+        grid-template-columns: 120px 1fr;
+        gap: 24px;
+    }
+
+    &__big {
+        text-align: center;
+    }
+
+    &__num {
+        font-family: $font-display;
+        font-size: 64px;
+        font-weight: 900;
+        color: var(--c, var(--accent));
+        line-height: 0.9;
+        letter-spacing: -0.04em;
+    }
+
+    &__scale {
+        font-family: $font-mono;
+        font-size: 10px;
+        color: var(--fg-dim);
+        letter-spacing: 0.12em;
+        margin-top: 4px;
+    }
+
+    &__verdict {
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+    }
+
+    &__copy {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.55;
+        font-weight: 500;
+        color: var(--fg);
+    }
+}
+
+// ============================================================================
+// Pros / Cons grid
+// ============================================================================
+.kf-proscons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 32px 0;
+
+    @include mq(sm) { grid-template-columns: 1fr 1fr; }
+
+    &__col {
+        border-radius: $radius-lg;
+        padding: 20px;
+    }
+
+    &__col--pros {
+        border: 1px solid color-mix(in srgb, #{$status-live} 35%, transparent);
+        background: color-mix(in srgb, #{$status-live} 8%, transparent);
+        --bullet: #{$status-live};
+    }
+
+    &__col--cons {
+        border: 1px solid color-mix(in srgb, #{$cat-apple} 35%, transparent);
+        background: color-mix(in srgb, #{$cat-apple} 8%, transparent);
+        --bullet: #{$cat-apple};
+    }
+
+    &__title {
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        font-weight: 800;
+        margin: 0 0 12px;
+        color: var(--bullet);
+        text-transform: uppercase;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            display: grid;
+            grid-template-columns: 14px 1fr;
+            gap: 8px;
+            font-size: 13px;
+            line-height: 1.45;
+
+            &::before {
+                content: var(--mark, '+');
+                color: var(--bullet);
+                font-weight: 800;
+            }
+        }
+    }
+
+    &__col--cons &__list li::before { content: '−'; }
+}
+
+// ============================================================================
+// Tags row
+// ============================================================================
+.kf-tags {
+    border-top: 1px solid var(--rule);
+    padding-top: 24px;
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    a {
+        @include glass-chip;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--fg-muted);
+        text-decoration: none;
+
+        &:hover { color: var(--fg); }
+    }
+}
+
+// ============================================================================
+// Share toolbar (bottom of article)
+// ============================================================================
+.kf-share {
+    margin-top: 32px;
+    padding: 20px;
+    background: var(--bg-alt);
+    border: 1px solid var(--rule);
+    border-radius: $radius-lg;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &__copy {
+        font-size: 13px;
+        color: var(--fg-muted);
+
+        strong { color: var(--fg); font-weight: 600; }
+    }
+
+    &__list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            @include glass-chip;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+
+            &:hover { color: var(--accent); }
+        }
+    }
+
+    &__icon {
+        width: 12px;
+        height: 12px;
+        display: block;
+    }
+}
+
+// ============================================================================
+// Reading progress bar (sits at the bottom edge of sticky header)
+// ============================================================================
+.kf-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    z-index: 60; // sits above the sticky site-header
+    pointer-events: none;
+
+    &__fill {
+        width: 0;
+        height: 100%;
+        background: var(--c, var(--accent));
+        transition: width 0.1s linear;
+    }
+}
+
+
+// ============================================================================
+// Score & pros/cons — design-mock refinements
+// ============================================================================
+.kf-score {
+    border-left: 3px solid var(--c, var(--accent));
+}
+
+.kf-proscons {
+    &__list li {
+        font-family: $font-serif;
+        font-weight: 500;
+        color: var(--fg);
+    }
+}
+
+// ============================================================================
+// Hero placeholder — striped editorial fill when no image is set
+// ============================================================================
+.kf-imgwrap--hero .kf-imgwrap__placeholder {
+    background:
+        repeating-linear-gradient(135deg, color-mix(in srgb, var(--c, var(--accent)) 14%, transparent) 0 1px, transparent 1px 14px),
+        var(--bg-alt);
+    border: 1px solid var(--rule);
+    border-radius: $radius-md;
+    aspect-ratio: var(--ratio, 16 / 9);
+    display: flex;
+    align-items: flex-end;
+    padding: 18px;
+    color: var(--fg-dim);
+
+    &__label {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+    }
+}
+
+// ============================================================================
+// Single article wrapper — wider container for the hero & comments
+// ============================================================================
+.kf-single {
+    --max:    720px;
+    --max-wide: 880px;
+
+    // Full-bleed wrapper on mobile (and harmless on desktop — the children
+    // below set their own max-widths and centre themselves).
+    max-width: 100%;
+
+    > .kf-article,
+    > .kf-related,
+    > .kf-comments {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    > .kf-comments .kf-comments__inner {
+        max-width: var(--max-wide);
+    }
+}
+
+// ============================================================================
+// Related posts — foot of single.php. Mirrors .kf-comments (full-bleed rule,
+// centred inner) and reuses the .kf-browse__list rows, so no new card CSS.
+// ============================================================================
+.kf-related {
+    border-top: 1px solid var(--rule);
+    padding-top: 48px;
+    // Breathing room before the comments slab so the gap above the slab edge
+    // roughly matches the slab's own top padding (~56px). The last browse row
+    // already contributes ~22px of padding, so 34px gets us there.
+    margin-bottom: 34px;
+}
+
+.kf-related__inner {
+    max-width: var(--max-wide);
+    margin: 0 auto;
+    // Match the article/comments gutters so rows don't touch the screen edge.
+    padding-left: 16px;
+    padding-right: 16px;
+
+    @include mq(md) { padding-left: 32px; padding-right: 32px; }
+    @include mq(lg) { padding-left: 40px; padding-right: 40px; }
+}
+
+.kf-related__head {
+    margin-bottom: 18px;
+}
+
+.kf-related__eyebrow {
+    display: block;
+    font-family: $font-mono;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    margin-bottom: 6px;
+}
+
+.kf-related__title {
+    font-family: $font-display;
+    font-size: 28px;
+    line-height: 1.1;
+    margin: 0;
+}
+
+// Last related row has no bottom rule — the comments slab edge already closes
+// the block off (unlike the archive list, where the trailing rule is wanted).
+.kf-related__list .kf-browse__row:last-child {
+    border-bottom: none;
+}
+
+// Pagination inside the_content (multi-page posts)
+.kf-pagination {
+    font-family: $font-mono;
+    font-size: 12px;
+    margin: 32px 0;
+    color: var(--fg-dim);
+
+    a, .post-page-numbers {
+        margin: 0 4px;
+        padding: 4px 10px;
+        border: 1px solid var(--rule);
+        border-radius: $radius-sm;
+        text-decoration: none;
+        color: var(--fg);
+    }
+
+    .post-page-numbers.current { @include glass-tinted(var(--accent)); }
+}

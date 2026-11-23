@@ -1,0 +1,89 @@
+{
+    "key": "group_newpixel_newsletter_headlines",
+    "title": "Headlines Pool",
+    "fields": [
+        {
+            "key": "field_newpixel_newsletter_headlines_intro",
+            "label": "",
+            "name": "",
+            "aria-label": "",
+            "type": "message",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "message": "When a newsletter issue draft is prepared, ONE of these headlines is randomly selected for the introductory paragraph. Simple HTML is allowed (<em>, <strong>, <a>). You can always edit the headline in the issue draft — this pool is just the starting point.",
+            "new_lines": "wpautop",
+            "esc_html": 0
+        },
+        {
+            "key": "field_newpixel_newsletter_headlines_repeater",
+            "label": "Headlines",
+            "name": "newsletter_headlines",
+            "aria-label": "",
+            "type": "repeater",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "layout": "block",
+            "pagination": 0,
+            "min": 0,
+            "max": 0,
+            "collapsed": "field_newpixel_newsletter_headlines_text",
+            "button_label": "Add Headline",
+            "rows_per_page": 20,
+            "sub_fields": [
+                {
+                    "key": "field_newpixel_newsletter_headlines_text",
+                    "label": "Text",
+                    "name": "headline",
+                    "aria-label": "",
+                    "type": "textarea",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 1,
+                    "rows": 2,
+                    "placeholder": "",
+                    "new_lines": "wpautop",
+                    "parent_repeater": "field_newpixel_newsletter_headlines_repeater"
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "newpixel-newsletter-headlines"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "modified": 1778965056
+}

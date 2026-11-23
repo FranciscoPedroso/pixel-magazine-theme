@@ -1,0 +1,381 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// kf-browse — flowing article list used on:
+//   • paginated front page (page 2+)
+//   • category / tag / author / date archives
+//   • search results
+//
+// Visually a richer sibling of .kf-more — bigger thumbnail, dek excerpt,
+// pill on top, hover states. Matches the editorial design language.
+// ============================================================================
+
+.kf-browse {
+    margin: 8px auto 48px;
+    max-width: 880px;
+    padding: 0 16px;
+
+    @include mq(md) { padding: 0 24px; }
+    @include mq(lg) { padding: 0; }
+
+    // When the archive includes a pager (multi-page result), the pager
+    // already provides 48px of bottom space — collapse the section's own
+    // bottom margin so we don't end up with 96px of empty space before
+    // the footer.
+    &:has(.kf-pager) {
+        margin-bottom: 0;
+    }
+
+    // When the browse list lives inside the homepage feed column, the
+    // surrounding `.kf-container` already provides the horizontal padding.
+    .kf-feed & {
+        max-width: none;
+        padding: 0;
+        margin: 0 0 48px;
+    }
+
+    // Same logic: inside a kf-container the outer padding is already applied.
+    .kf-container & {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+// ----- Page header (Página 2 · Categoria: Hardware · Search: linux …) -----
+.kf-browse__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 28px 0 18px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 8px;
+}
+
+.kf-browse__eyebrow {
+    font-family: $font-mono;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--c, var(--accent));
+    margin-bottom: 8px;
+
+    // Subtle link variant — used on sub-category archives to show the parent
+    // section as a clickable breadcrumb anchor (e.g. "APPLE ›" above "MacBook").
+    a {
+        color: inherit;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+
+        &:hover { opacity: 0.65; }
+    }
+
+    &--link span[aria-hidden="true"] {
+        display: inline-block;
+        margin-left: 2px;
+        opacity: 0.7;
+    }
+}
+
+.kf-browse__title {
+    font-family: $font-display;
+    font-size: clamp(1.6rem, 4vw, 2.5rem); // 26 → 40
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0;
+    color: var(--fg);
+}
+
+.kf-browse__title em {
+    color: var(--c, var(--accent));
+    font-style: normal;
+}
+
+.kf-browse__copy {
+    font-family: $font-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--fg-muted);
+    margin: 6px 0 0;
+    max-width: 540px;
+}
+
+.kf-browse__count {
+    font-family: $font-mono;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    strong {
+        font-weight: 800;
+        color: var(--fg);
+    }
+}
+
+// ----- The list itself ----------------------------------------------------
+.kf-browse__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.kf-browse__row {
+    position: relative; // anchor the stretched title link
+    border-bottom: 1px solid $rule-soft;
+
+    :root.dark & { border-bottom-color: rgba(255, 255, 255, 0.06); }
+}
+
+.kf-browse__link {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 16px;
+    padding: 22px 0;
+    color: inherit;
+    align-items: center;
+
+    @include mq(sm) {
+        grid-template-columns: 160px 1fr;
+        gap: 24px;
+        padding: 26px 0;
+    }
+
+    @include mq(md) {
+        grid-template-columns: 200px 1fr;
+        gap: 28px;
+        padding: 28px 0;
+    }
+}
+
+// Stretched-link pattern: the title's <a> is the only "real" link covering
+// the whole row, while the category pill (rendered as a real <a>) sits above
+// it via z-index so the pill click goes to the category archive instead of
+// the article.
+.kf-browse__title-link {
+    text-decoration: none;
+    color: inherit;
+
+    &::after { @include stretched-link-overlay; }
+}
+
+.kf-browse__row .kf-pill {
+    position: relative;
+    z-index: 2;
+}
+
+.kf-browse__thumb {
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-md;
+    aspect-ratio: 4 / 3;
+    background: var(--bg-alt);
+
+    img,
+    .kf-imgwrap__placeholder {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        aspect-ratio: 4 / 3;
+    }
+}
+
+// ----- Body -------------------------------------------------------------
+.kf-browse__body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kf-browse__meta-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: $font-mono;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+
+    .kf-pill { transform: translateY(-1px); }
+}
+
+.kf-browse__meta-top .sep {
+    color: var(--fg-dim);
+    opacity: 0.5;
+}
+
+.kf-browse__heading {
+    font-family: $font-display;
+    font-size: clamp(1.125rem, 2.4vw, 1.5rem); // 18 → 24
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--fg);
+    text-wrap: balance;
+    // .kf-headline base lives in _cards.scss — the .kf-browse__row:hover
+    // trigger below animates it.
+}
+
+// Suppress the row's title underline-grow when the user is hovering the
+// category pill specifically — keeps the pill an isolated click target.
+.kf-browse__row:hover:not(:has(.kf-pill:hover)) .kf-headline { background-size: 100% 1.5px; }
+
+.kf-browse__dek {
+    // No font-family declared — inherits $font-sans from the body, which
+    // matches the dek treatment on the frontpage cards (.kf-card__dek) so
+    // the same content reads consistently between page 1 and page 2+.
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--fg-muted);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    @include mq(sm) {
+        font-size: 15px;
+        -webkit-line-clamp: 2;
+    }
+}
+
+.kf-browse__meta-bot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: $font-mono;
+    font-size: 11px;
+    color: var(--fg-dim);
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+}
+
+// ----- Empty state ------------------------------------------------------
+.kf-browse__empty {
+    text-align: center;
+    padding: 80px 16px;
+    font-family: $font-serif;
+    color: var(--fg-muted);
+
+    h2 {
+        font-family: $font-display;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 8px;
+        color: var(--fg);
+    }
+
+    p { margin: 0; }
+}
+
+// ============================================================================
+// kf-pagination — editorial pager (numbers, prev / next pills)
+// Matches the design language: mono numerals, pill buttons, soft rules.
+// ============================================================================
+.kf-pager {
+    // Symmetric 48px gutter top and bottom. Pager owns its breathing room
+    // regardless of which parent renders it (front-page main or .kf-browse
+    // archive section), so the visual spacing stays identical on page 1
+    // and page 2+. See `.kf-browse:has(.kf-pager)` below — when the pager
+    // is inside a kf-browse section, that section's own bottom margin
+    // collapses to avoid double-spacing.
+    margin: 48px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    &__status {
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+
+        strong {
+            font-weight: 800;
+            color: var(--fg);
+        }
+    }
+
+    &__nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+
+        // Style ALL pager items via the `page-numbers` class (which WP applies
+        // to every <a>/<span> emitted by paginate_links). Targeting `a, span`
+        // would also hit nested spans inside prev/next links (the arrow glyph
+        // and the screen-reader-text), painting them as their own pills.
+        .page-numbers {
+            font-family: $font-mono;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            @include glass-chip;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        // Hover and focus-visible share the same look so the visual is
+        // identical regardless of whether the link is focused (post-click)
+        // or just being hovered. Suppress the global :focus-visible outline
+        // so it doesn't make the focused element look heavier than the
+        // hovered one.
+        a.page-numbers:hover,
+        a.page-numbers:focus-visible {
+            color: var(--c, var(--accent));
+            outline: none;
+        }
+
+        // Current page: the pager's "you are here", in the same purple glass as the
+        // other action buttons (Entrar, Publicar, profile).
+        .page-numbers.current {
+            @include glass-tinted(var(--accent));
+            filter: none;
+        }
+
+        // Dots between distant numbers
+        .page-numbers.dots {
+            background: transparent;
+            box-shadow: none;
+            color: var(--fg-dim);
+            min-width: 18px;
+            padding: 0 4px;
+        }
+
+        // Prev / Next: icon-only round pills (force 36×36, smaller glyph)
+        .page-numbers.prev,
+        .page-numbers.next {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            padding: 0;
+            font-family: $font-display;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 36px; // match container height — kills any baseline gap
+        }
+    }
+}
+

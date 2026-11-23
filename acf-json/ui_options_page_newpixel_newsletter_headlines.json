@@ -1,0 +1,26 @@
+{
+    "key": "ui_options_page_newpixel_newsletter_headlines",
+    "title": "Headlines",
+    "active": true,
+    "menu_order": 0,
+    "page_title": "Newsletter Headlines Pool",
+    "menu_slug": "newpixel-newsletter-headlines",
+    "parent_slug": "edit.php?post_type=pixel_newsletter",
+    "advanced_configuration": 1,
+    "icon_url": "",
+    "menu_title": "Headlines",
+    "position": "",
+    "redirect": 0,
+    "description": "Pool of editorial phrases randomly picked for each newsletter issue intro. Add, remove or edit freely — variety keeps the newsletter fresh for subscribers.",
+    "menu_icon": {
+        "type": "dashicons",
+        "value": "dashicons-format-quote"
+    },
+    "update_button": "Save Pool",
+    "updated_message": "Headlines pool updated",
+    "capability": "manage_options",
+    "data_storage": "options",
+    "post_id": "",
+    "autoload": 0,
+    "modified": 1778965056
+}

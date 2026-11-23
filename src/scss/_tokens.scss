@@ -1,0 +1,106 @@
+@use 'variables' as *;
+@use 'glass';
+
+// ============================================================================
+// CSS custom properties — drive light/dark theme switching at runtime
+// ============================================================================
+:root {
+    --bg:        #{$bg};
+    --bg-alt:    #{$bg-alt};
+    --bg-accent: #{$bg-accent};
+    --fg:        #{$fg};
+    --fg-muted:  #{$fg-muted};
+    --fg-dim:    #{$fg-dim};
+    --rule:      #{$rule};
+    --rule-soft: #{$rule-soft};
+    --inv-fg:    #{$inv-fg};
+
+    --accent:    #{$accent};
+    --status-live: #{$status-live};
+
+    // Liquid glass (see _glass.scss). Highlights change with the theme; the shine
+    // and shadow colours are always pure white/black, as in real glass.
+    --glass-light: #fff;
+    --glass-dark:  #000;
+    --glass-tint:  #bbbbbc;
+    --glass-reflex-light: 1;
+    --glass-reflex-dark:  1;
+    --glass-sat: 150%;
+    --np-glass-edges: #{glass.$glass-edges};
+    --np-glass-thumb: #{glass.$glass-edges-thumb};
+
+    // Per-category accents (used by post body classes / inline style fallbacks)
+    --cat-ia:        #{$cat-ia};
+    --cat-hardware:  #{$cat-hardware};
+    --cat-software:  #{$cat-software};
+    --cat-apple:     #{$cat-apple};
+    --cat-games:     #{$cat-games};
+    --cat-reviews:   #{$cat-reviews};
+    --cat-tutorials: #{$cat-tutorials};
+    --cat-opinion:   #{$cat-opinion};
+    --cat-audio:     #{$cat-audio};
+    --cat-wearables: #{$cat-wearables};
+    --cat-fallback:  #{$cat-fallback};
+}
+
+// Dark theme tokens — extracted into a mixin so the same vars are emitted by
+// both the explicit `.dark` class (set by JS, has localStorage persistence)
+// AND the OS preference media query (the no-JS fallback).
+@mixin pixel-dark-tokens {
+    --bg:        #0a0a0a;
+    --bg-alt:    #141414;
+    --bg-accent: #fafaf7;
+    --fg:        #fafaf7;
+    --fg-muted:  #a3a3a3;
+    // #808080 → ≈5.0:1 against #0a0a0a (WCAG AA for normal text). Was
+    // #737373, which only reached ~4.2:1 and was failing the Lighthouse
+    // contrast audit. Still clearly dimmer than --fg-muted (#a3a3a3).
+    // Drives the meta-mono row on single, byline date, form hints, kicker
+    // labels, footer headings, etc.
+    --fg-dim:    #808080;
+    --rule:      rgba(255, 255, 255, 0.10);
+    --rule-soft: rgba(255, 255, 255, 0.05);
+    --inv-fg:    #0a0a0a;
+    // In the dark theme the glass shines less and casts more shadow.
+    --glass-reflex-light: 0.3;
+    --glass-reflex-dark:  2;
+}
+
+// Manual override (set by JS via `.dark` class or data-theme attribute).
+:root.dark,
+:root[data-theme="dark"] {
+    @include pixel-dark-tokens;
+}
+
+// No-JS fallback: if the user's OS prefers dark and no JS-set `data-theme`
+// attribute exists, apply the dark tokens. With JS enabled, the inline
+// boot-script in <head> always sets `data-theme` (to "dark" or "light"),
+// so this @media only runs for users with JS disabled — and the explicit
+// attribute always wins for everyone else.
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        @include pixel-dark-tokens;
+    }
+}
+
+// Native controls (scrollbars, autofill, selectors) matching an explicit choice
+// in the theme selector. In "auto" the header.php meta's "light dark" applies:
+// pinning it here via data-theme would make the page declare itself light-only,
+// and the Android WebView would again report "light" to the system.
+:root[data-theme-mode="light"] { color-scheme: light; }
+:root[data-theme-mode="dark"]  { color-scheme: dark; }
+
+// Per-category background tint helper (for pills) using rgba on the colour
+// Usage: <span class="cat-pill" data-cat="ia"> ...
+[data-cat="ia"]        { --c: var(--cat-ia); }
+[data-cat="hardware"]  { --c: var(--cat-hardware); }
+[data-cat="software"]  { --c: var(--cat-software); }
+[data-cat="apple"]     { --c: var(--cat-apple); }
+[data-cat="games"]     { --c: var(--cat-games); }
+[data-cat="reviews"]   { --c: var(--cat-reviews); }
+[data-cat="tutorials"],
+[data-cat="tutoriais"] { --c: var(--cat-tutorials); }
+[data-cat="opinion"],
+[data-cat="opiniao"]   { --c: var(--cat-opinion); }
+[data-cat="audio"]     { --c: var(--cat-audio); }
+[data-cat="wearables"] { --c: var(--cat-wearables); }

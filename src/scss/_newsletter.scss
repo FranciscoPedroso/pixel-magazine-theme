@@ -1,0 +1,119 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// End-of-article newsletter (template-parts/newsletter-inline.php)
+// Same wide column as related posts; the usual .kf-newsletter card, with text
+// on the left and the form on the right from md up.
+// ============================================================================
+.kf-nl-inline {
+    margin: 8px auto 40px;
+
+    &[hidden] { display: none; }
+
+    &__inner {
+        max-width: var(--max-wide, 880px);
+        margin: 0 auto;
+        padding-left: 16px;
+        padding-right: 16px;
+
+        @include mq(md) { padding-left: 32px; padding-right: 32px; }
+    }
+}
+
+.kf-newsletter--inline {
+    padding: 24px;
+    display: grid;
+    gap: 16px;
+
+    @include mq(md) {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+        align-items: center;
+        gap: 32px;
+        padding: 28px 32px;
+    }
+
+    .kf-newsletter__title {
+        font-size: clamp(22px, 3vw, 28px);
+        margin-bottom: 8px;
+    }
+
+    .kf-newsletter__copy {
+        font-size: 13px;
+        margin: 0;
+    }
+
+    .kf-newsletter__input,
+    .kf-newsletter__submit {
+        font-size: 14px;
+        padding: 12px 14px;
+    }
+}
+
+// ============================================================================
+// Newsletter card — black surface in light mode, white in dark mode
+// (uses inverted tokens)
+// ============================================================================
+.kf-newsletter {
+    background: var(--fg);
+    color: var(--inv-fg);
+    padding: 18px;
+    border-radius: $radius-lg;
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        opacity: 0.6;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+
+    &__title {
+        font-family: $font-display;
+        font-size: 22px;
+        font-weight: 800;
+        margin: 0 0 10px;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+    }
+
+    &__copy {
+        font-size: 11px;
+        opacity: 0.7;
+        line-height: 1.5;
+        margin: 0 0 12px;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__input {
+        width: 100%;
+        padding: 10px 16px;
+        @include glass-field;
+        color: var(--inv-fg);
+        font-family: $font-sans;
+        font-size: 12px;
+        box-sizing: border-box;
+
+        // The card is inverted (--fg background): the placeholder follows its text.
+        &::placeholder { color: color-mix(in srgb, var(--inv-fg) 50%, transparent); }
+    }
+
+    &__submit {
+        padding: 10px 12px;
+        // The newsletter card is inverted (--fg background), so the button's text
+        // is too.
+        @include glass-tinted(var(--accent), var(--inv-fg));
+        border-radius: $radius-pill;
+        font-family: $font-sans;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+}

@@ -1,0 +1,422 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// /perfil/ — user profile page (account, newsletter, theme, saved articles,
+// recent comments, privacy, danger zone, logout).
+// ============================================================================
+
+.kf-profile {
+    padding-top: 32px;
+    padding-bottom: 80px;
+
+    @include mq(md) {
+        padding-top: 56px;
+        padding-bottom: 96px;
+    }
+
+    &__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+        text-decoration: none;
+        margin-bottom: 20px;
+        transition: color 0.2s ease;
+
+        .material-symbols-outlined { font-size: 18px; }
+
+        &:hover { color: $accent; }
+
+        @include mq(md) { margin-bottom: 28px; }
+    }
+
+    &__head {
+        max-width: 720px;
+        margin: 0 auto 32px;
+        text-align: left;
+
+        @include mq(md) { margin-bottom: 48px; }
+    }
+
+    &__eyebrow {
+        font-family: $font-mono;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: $accent;
+        margin-bottom: 12px;
+    }
+
+    &__title {
+        font-family: $font-display;
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 12px;
+        color: var(--fg);
+
+        em {
+            font-style: italic;
+            font-weight: 500;
+        }
+    }
+
+    &__dot { color: $accent; }
+
+    &__copy {
+        font-family: $font-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        color: var(--fg-muted);
+        margin: 0;
+        max-width: 540px;
+    }
+
+    // ====================== Card grid ======================
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        max-width: 960px;
+        margin: 0 auto;
+
+        @include mq(md) {
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    }
+
+    &__card {
+        background: var(--bg-alt);
+        border: 1px solid var(--rule);
+        border-radius: $radius-lg;
+        padding: 22px 24px 24px;
+        display: flex;
+        flex-direction: column;
+
+        @include mq(md) { padding: 28px 30px; }
+
+        &--wide {
+            @include mq(md) { grid-column: 1 / -1; }
+        }
+
+        &--danger {
+            border-color: color-mix(in srgb, #ef4444 30%, var(--rule));
+        }
+
+        &--logout {
+            background: transparent;
+            border: 0;
+            padding: 0;
+
+            @include mq(md) { grid-column: 1 / -1; }
+        }
+    }
+
+    &__card-title {
+        font-family: $font-display;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0 0 12px;
+        color: var(--fg);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+
+        .material-symbols-outlined {
+            font-size: 22px;
+            color: $accent;
+        }
+    }
+
+    .kf-profile__card--danger &__card-title .material-symbols-outlined {
+        color: #ef4444;
+    }
+
+    &__card-copy {
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--fg-muted);
+        margin: 0 0 18px;
+
+        strong { color: var(--fg); font-weight: 700; }
+    }
+
+    // ====================== Form ======================
+    &__form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    &__field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        label {
+            font-family: $font-mono;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            font-weight: 700;
+            color: var(--fg-dim);
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px 18px;
+            @include glass-field;
+            font-family: $font-display;
+            font-size: 15px;
+            color: var(--fg);
+            box-sizing: border-box;
+
+            &:disabled,
+            &[readonly] {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        }
+    }
+
+    &__hint {
+        font-size: 11px;
+        color: var(--fg-dim);
+        margin-top: 2px;
+    }
+
+    &__form-msg {
+        margin-top: 15px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: color-mix(in srgb, $accent 14%, transparent);
+        color: $accent;
+        font-size: 13px;
+        font-weight: 600;
+
+        &.is-error {
+            background: color-mix(in srgb, #ef4444 14%, transparent);
+            color: #ef4444;
+        }
+    }
+
+    // ====================== Buttons ======================
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        @include glass-tinted($accent);
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-family: $font-display;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        align-self: flex-start;
+
+        &:disabled { opacity: 0.6; cursor: progress; }
+
+        // Secondary buttons stay clear glass, like the site's other pills.
+        &--ghost,
+        &--block {
+            background: color-mix(in srgb, var(--glass-tint) 12%, transparent);
+            box-shadow: var(--np-glass-thumb);
+            color: var(--fg);
+
+            &:hover:not(:disabled) { filter: none; }
+        }
+
+        &--danger { --tint: #ef4444; }
+
+        &--block {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    // ====================== Toggle (newsletter) ======================
+    &__toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        user-select: none;
+
+        input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        // iOS 26-style switch: a glass track, and the thumb becomes a lens when
+        // pressed, stretching and turning translucent under the finger.
+        &-track {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: color-mix(in srgb, var(--glass-tint) 22%, transparent);
+            border-radius: 999px;
+            @include glass-edges-thumb;
+            transition: background 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        &-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 999px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            transform-origin: left;
+            transition:
+                translate 300ms cubic-bezier(1, 0, 0.4, 1),
+                scale 200ms cubic-bezier(0.5, 0, 0, 1),
+                background-color 200ms ease;
+        }
+
+        &:active &-thumb {
+            scale: 1.35 1.1;
+            background: color-mix(in srgb, #fff 45%, transparent);
+            @include glass-edges-thumb;
+        }
+
+        input:focus-visible + &-track {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        input:checked + &-track {
+            background: $accent;
+
+            > .kf-profile__toggle-thumb {
+                translate: 22px 0;
+                transform-origin: right;
+            }
+        }
+
+        &-label {
+            font-size: 14px;
+            color: var(--fg);
+        }
+    }
+
+    // ====================== Radio group (theme) ======================
+    // Same glass selector as the header and modal: three equal columns and a
+    // thumb sliding to the chosen one (HTML order: auto, light, dark).
+    &__radio-group {
+        --i: 0;
+        position: relative;
+        display: inline-grid;
+        grid-template-columns: repeat(3, 1fr);
+        padding: 4px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--glass-tint) 10%, transparent);
+        @include glass-edges;
+
+        &:has([value="light"]:checked) { --i: 1; }
+        &:has([value="dark"]:checked)  { --i: 2; }
+
+        &::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 4px;
+            width: calc((100% - 8px) / 3);
+            @include glass-thumb;
+            translate: calc(var(--i) * 100%) 0;
+        }
+
+        &:not(:has(:checked))::before { opacity: 0; }
+
+        &[data-moved]:has([value="auto"]:checked)::before  { animation: np-squash-a 440ms ease; }
+        &[data-moved]:has([value="light"]:checked)::before { animation: np-squash-b 440ms ease; }
+        &[data-moved]:has([value="dark"]:checked)::before  { animation: np-squash-c 440ms ease; }
+    }
+
+    &__radio {
+        position: relative;
+        z-index: 1;
+        cursor: pointer;
+
+        input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        span {
+            display: block;
+            text-align: center;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-family: $font-display;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--fg-muted);
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        input:checked + span { color: var(--fg); }
+        input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+        &:hover span { color: var(--fg); }
+    }
+
+    // ====================== Recent comments list ======================
+    &__comments {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        li {
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 10px;
+            &:last-child { border-bottom: 0; padding-bottom: 0; }
+        }
+
+        a {
+            display: block;
+            color: var(--fg);
+            text-decoration: none;
+
+            &:hover .kf-profile__comment-body { color: $accent; }
+        }
+    }
+
+    &__comment-meta {
+        display: block;
+        font-family: $font-mono;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin-bottom: 4px;
+    }
+
+    &__comment-body {
+        display: block;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--fg-muted);
+        transition: color 0.2s ease;
+    }
+}

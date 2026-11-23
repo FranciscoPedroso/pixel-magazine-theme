@@ -1,0 +1,84 @@
+@use 'variables' as *;
+@use 'glass' as *;
+
+// ============================================================================
+// Section hero — "Sinal, não ruído."  (large display headline + time pills)
+// ============================================================================
+.kf-hero {
+    padding: 24px 0 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    @include mq(md) {
+        padding: 28px 0 14px;
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+    }
+}
+
+.kf-hero__title {
+    font-family: $font-display;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    // With tight tracking, italic words would touch the next word.
+    word-spacing: 0.12em;
+    line-height: 0.92;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--fg);
+    font-size: clamp(2.5rem, 8vw, 5.5rem); // 40px → 88px
+
+    em {
+        font-style: italic;
+        font-weight: 500;
+    }
+
+    .kf-hero__dot {
+        color: var(--accent);
+    }
+}
+
+// Mobile category scroller (replaces the desktop left rail filters on small screens)
+.kf-cat-scroller {
+    display: flex;
+    gap: 8px;
+    padding: 4px 16px 16px;
+    margin: 0 -16px; // bleed to viewport edges
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+
+    @include mq(lg) { display: none; }
+
+    // Match the canonical .kf-pill aesthetic so categories look identical
+    // wherever they appear (cards, filter rail, scroller, more list).
+    &__pill {
+        @include pill-base;
+        flex-shrink: 0;
+
+        // Tudo / "all" pill has no category colour — fall back to neutral.
+        &:not([data-cat]) {
+            --c: var(--fg-dim); // neutral edges and halo, not the brand lilac
+            background: var(--rule-soft);
+            color: var(--fg-muted);
+        }
+
+        // Category-coloured pills get a leading dot (matches .kf-pill__dot).
+        &[data-cat]::before { @include pill-dot; }
+
+        &.is-active {
+            // Active: glass in the category's own colour ("Tudo" stays neutral).
+            @include glass-tinted(var(--c, var(--fg)));
+        }
+
+        // The active pill is already solid tinted glass: lighting it would wash it out.
+        &:not(.is-active) { @include pill-hover; }
+
+        &:focus-visible { outline-color: var(--c, var(--fg)); }
+    }
+}
