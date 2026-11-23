@@ -54,10 +54,6 @@ npm run build:prod # build + minified production theme (needs PHP in PATH or PHP
 
 `build:prod` writes to a sibling `pixelmagazine/` folder when the theme sits inside `wp-content/themes/`, and to `build/pixelmagazine/` in a standalone clone. Set `THEME_BUILD_DEST` to choose another folder named `pixelmagazine`.
 
-## Related
-
-Content for the site comes from an n8n pipeline: RSS sources → AI selection → AI rewrite and cover image → automated checks → scheduled post, or a draft for human review when a check fails. The theme is the publishing side of that setup.
-
 ---
 
 Francisco Pedroso · [franciscopedroso.com](https://franciscopedroso.com)
